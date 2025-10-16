@@ -15,7 +15,6 @@ import { RemoveScroll } from '@kit/ui/remove-scroll';
 import { AnimatePresence, motion } from 'motion/react';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-// test v2
 export interface TourStep {
     /**
      * The element to highlight. You can use query selector, an element or a function that returns an element.
@@ -631,6 +630,7 @@ function TourFrame(props: TourFrameProps) {
                     {...props}
                     style={{
                         ...props.style,
+                        // @ts-ignore
                         borderRadius: config.stageRadius || 5,
                     }}
                 />
