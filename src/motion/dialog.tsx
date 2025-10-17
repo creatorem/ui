@@ -7,7 +7,7 @@ import { LucideX } from 'lucide-react';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 import { useDelay, useFnDelay } from '../hooks/use-delay';
-// test
+
 const Z_INDEX = 1000;
 
 const DEFAULT_DURATION = 0.5;
