@@ -1,17 +1,11 @@
 'use client';
 
 import { cn, formatTimeDifference } from '@kit/shared';
-import type { FileObject } from '@supabase/storage-js';
-import { useMutation } from '@tanstack/react-query';
-import { isEqual, truncate, upperCase } from 'lodash';
-import Image from 'next/image';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-import { Icon } from '../icon';
 import { Badge } from '@kit/ui/badge';
 import { Button } from '@kit/ui/button';
 import { Checkbox } from '@kit/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@kit/ui/dialog';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@kit/ui/empty';
 import { Label } from '@kit/ui/label';
 import { ScrollArea } from '@kit/ui/scroll-area';
 import { Skeleton } from '@kit/ui/skeleton';
@@ -19,6 +13,13 @@ import { Table, TableBody, TableCell, TableRow } from '@kit/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@kit/ui/tabs';
 import { Textarea } from '@kit/ui/textarea';
 import { VisuallyHidden } from '@kit/ui/visually-hidden';
+import type { FileObject } from '@supabase/storage-js';
+import { useMutation } from '@tanstack/react-query';
+import { isEqual, truncate, upperCase } from 'lodash';
+import Image from 'next/image';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { Icon } from '../icon';
 import { Clipboard } from './clipboard';
 import { ConfirmButton } from './confirm-button';
 import { FileInput, SORTED_SUPPORTED_FORMATS } from './file-upload';
@@ -101,22 +102,23 @@ function MediaManager<TMultiple extends boolean, TIsUrl extends boolean>({
     isUrl = false as TIsUrl,
     disabled: disabledProp = false,
     formatType: formatTypeProp = 'image',
-}: MediaManagerProps<TMultiple, TIsUrl> & Partial<
-Pick<
-    MediaManagerContextType<TMultiple, TIsUrl>,
-    | 'onDelete'
-    | 'onUpdate'
-    | 'onUpload'
-    | 'disabled'
-    | 'multiple'
-    | 'isUrl'
-    | 'formatType'
-    | 'onValueChange'
-    | 'onMediaUpdate'
-    | 'value'
->
-> &
-React.PropsWithChildren) {
+}: MediaManagerProps<TMultiple, TIsUrl> &
+    Partial<
+        Pick<
+            MediaManagerContextType<TMultiple, TIsUrl>,
+            | 'onDelete'
+            | 'onUpdate'
+            | 'onUpload'
+            | 'disabled'
+            | 'multiple'
+            | 'isUrl'
+            | 'formatType'
+            | 'onValueChange'
+            | 'onMediaUpdate'
+            | 'value'
+        >
+    > &
+    React.PropsWithChildren) {
     const [isOpen, setIsOpen] = useState(false);
     const [path, setPath] = useState<string[]>(rootPath);
     const [disabled, setDisabled] = useState(disabledProp);
@@ -377,10 +379,15 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                         disabled={deleteMediaMutation.isPending}
                         header={{
                             title: 'Delete asset',
-                            description: `Are you sure you want to delete the "${truncate(focusedMedia.name, {
-                                length: 20,
-                                separator: ' ',
-                            }) + (focusedMedia.name.length > 20 ? '.' + (focusedMedia.name.split('.').at(-1) || '') : '')}" asset?`,
+                            description: `Are you sure you want to delete the "${
+                                truncate(focusedMedia.name, {
+                                    length: 20,
+                                    separator: ' ',
+                                }) +
+                                (focusedMedia.name.length > 20
+                                    ? '.' + (focusedMedia.name.split('.').at(-1) || '')
+                                    : '')
+                            }" asset?`,
                         }}
                         className="mt-2 flex items-center justify-center gap-x-2"
                     >
@@ -543,7 +550,10 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
     });
 
     return (
-        <DialogContent {...props} className={cn('w-[1200px] max-w-[90%] gap-0 p-0', className)}>
+        <DialogContent
+            {...props}
+            className={cn('w-[1200px] max-w-[90%] gap-0 p-0 sm:max-w-[90%]', className)}
+        >
             <VisuallyHidden>
                 <DialogTitle>Media Manager</DialogTitle>
                 <DialogDescription className="text-sm">Manage your media assets</DialogDescription>
@@ -557,42 +567,62 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                 </div>
                 <div className="flex border-b">
                     <TabsContent value="manager" className="mt-0 w-full">
-                        <div className="flex border-b">
-                            <ScrollArea type="always" className="h-[600px] flex-1">
-                                <div className="flex flex-1 flex-nowrap gap-4 p-6">
-                                    {medias.map((media, index) => (
-                                        <div
-                                            key={index}
-                                            className={
-                                                'relative flex h-40 cursor-pointer items-center justify-center rounded-md border bg-gray-50 p-1' +
-                                                (focusedMedia?.id === media.id
-                                                    ? ' ring-ring ring-2 ring-offset-4 outline-hidden'
-                                                    : '')
-                                            }
-                                            onClick={createSelector(media)}
+                        <div className="flex h-[600px] border-b">
+                            {medias.length === 0 ? (
+                                <div className="flex h-full w-full items-center justify-center cursor-pointer" onClick={() => setTab('import')}>
+                                    <div className="mx-auto">
+                                        <Empty
+                                            className="rounded-lg transition-all duration-300"
                                         >
-                                            <Image
-                                                src={getUrl(media, path)}
-                                                alt={media.user_metadata?.alternativeText || media.name}
-                                                width={100}
-                                                height={100}
-                                                className="h-full w-auto max-w-full rounded-xs object-contain"
-                                            />
-                                            {multiple && (
-                                                <div className="absolute top-2 right-2">
-                                                    <Checkbox
-                                                        className="bg-gray-50"
-                                                        onCheckedChange={toggleSelectionItem(media)}
-                                                        checked={selection
-                                                            .map((s) => s.id)
-                                                            .includes(media.id)}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                                            <EmptyHeader>
+                                                <EmptyMedia variant="icon">
+                                                    <Icon.imageUp className="size-6" />
+                                                </EmptyMedia>
+                                                <EmptyTitle>No media found</EmptyTitle>
+                                                <EmptyDescription>
+                                                    Upload a file to get started.
+                                                </EmptyDescription>
+                                            </EmptyHeader>
+                                        </Empty>
+                                    </div>
                                 </div>
-                            </ScrollArea>
+                            ) : (
+                                <ScrollArea type="always" className="h-full flex-1">
+                                    <div className="flex flex-1 flex-nowrap gap-4 p-6">
+                                        {medias.map((media, index) => (
+                                            <div
+                                                key={index}
+                                                className={
+                                                    'relative flex h-40 cursor-pointer items-center justify-center rounded-md border bg-gray-50 p-1' +
+                                                    (focusedMedia?.id === media.id
+                                                        ? ' ring-ring ring-2 ring-offset-4 outline-hidden'
+                                                        : '')
+                                                }
+                                                onClick={createSelector(media)}
+                                            >
+                                                <Image
+                                                    src={getUrl(media, path)}
+                                                    alt={media.user_metadata?.alternativeText || media.name}
+                                                    width={100}
+                                                    height={100}
+                                                    className="h-full w-auto max-w-full rounded-xs object-contain"
+                                                />
+                                                {multiple && (
+                                                    <div className="absolute top-2 right-2">
+                                                        <Checkbox
+                                                            className="bg-gray-50"
+                                                            onCheckedChange={toggleSelectionItem(media)}
+                                                            checked={selection
+                                                                .map((s) => s.id)
+                                                                .includes(media.id)}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            )}
                             {focusedMedia ? (
                                 <EditMediaForm
                                     focusedMedia={focusedMedia}
