@@ -569,11 +569,12 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                     <TabsContent value="manager" className="mt-0 w-full">
                         <div className="flex h-[600px] border-b">
                             {medias.length === 0 ? (
-                                <div className="flex h-full w-full items-center justify-center cursor-pointer" onClick={() => setTab('import')}>
+                                <div
+                                    className="flex h-full w-full cursor-pointer items-center justify-center"
+                                    onClick={() => setTab('import')}
+                                >
                                     <div className="mx-auto">
-                                        <Empty
-                                            className="rounded-lg transition-all duration-300"
-                                        >
+                                        <Empty className="rounded-lg transition-all duration-300">
                                             <EmptyHeader>
                                                 <EmptyMedia variant="icon">
                                                     <Icon.imageUp className="size-6" />
@@ -790,7 +791,7 @@ function DefaultImage<TMultiple extends boolean, TIsUrl extends boolean>({
         <Image
             src={getImageSrc()}
             alt={getImageAlt()}
-            className={cn('h-full w-auto max-w-full object-contain', className)}
+            className={cn('h-full w-auto max-w-full rounded-md object-contain', className)}
             width={100}
             height={100}
         />

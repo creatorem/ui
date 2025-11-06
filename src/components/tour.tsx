@@ -2,18 +2,27 @@
 
 import { cn } from '@kit/shared';
 import { Button } from '@kit/ui/button';
+import { Icon } from '@kit/ui/icon';
 import {
     Popover,
     PopoverAnchor,
     PopoverArrow,
-    PopoverClose,
     PopoverContent,
     PopoverPortal,
     PopoverTrigger,
 } from '@kit/ui/popover';
 import { RemoveScroll } from '@kit/ui/remove-scroll';
+import { Slot } from '@radix-ui/react-slot';
 import { AnimatePresence, motion } from 'motion/react';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+const DEFAULT_MAX_SEARCH_TIMEOUT = 2000;
+
+export interface TourElementClickOptions {
+    element: Element;
+    step: TourStep;
+    moveNext: () => Promise<void>;
+}
 
 export interface TourStep {
     /**
@@ -64,6 +73,66 @@ export interface TourStep {
      * The align props of the PopoverContent component.
      */
     align?: React.ComponentProps<typeof PopoverContent>['align'];
+    /**
+     * Allow to interact with the active element during the tour.
+     *
+     * @default false
+     */
+    interactWithActiveElement?: boolean;
+    /**
+     * Callback triggered when the active element is clicked during the tour.
+     * Only works when interactWithActiveElement is true.
+     *
+     * @param event - The mouse event from the click
+     * @param options - Contains the element, the step and the moveNext callback
+     */
+    onElementClick?: (event: MouseEvent, options: TourElementClickOptions) => Promise<void>;
+    /**
+     * When true, the next step will be handled in the onElementClick callback.
+     *
+     * @default false
+     */
+    nextHandledInElementClick?: boolean;
+    /**
+     * When true, automatically move to the next step when the user clicks on the active element.
+     * Only works when interactWithActiveElement is true.
+     * When enabled, the Next button will be disabled to guide users to click the element.
+     *
+     * @default false
+     */
+    nextOnClick?: boolean;
+    /**
+     * Control which tour elements should be hidden for this specific step.
+     * Accepts an array of element identifiers to hide.
+     *
+     * @example ['noClose', 'noPrevious'] // Hides close and previous buttons
+     * @default []
+     */
+    display?: (
+        | 'noClose'
+        | 'noPrevious'
+        | 'noNext'
+        | 'noTitle'
+        | 'noDescription'
+        | 'noArrow'
+        | 'noProgress'
+        | 'noOverlay'
+        | 'noFrame'
+    )[];
+    /**
+     * Time in milliseconds to wait before attempting to find the element.
+     * Useful for elements that appear after animations or transitions.
+     *
+     * @default 0
+     */
+    waitToGetElement?: number;
+    /**
+     * When true, suppresses the console error if the element is not found.
+     * Useful for optional tour steps or elements that may not always be present.
+     *
+     * @default false
+     */
+    noErrorIfNotFound?: boolean;
     onHighlightStarted?: (element?: Element, step?: TourStep) => void;
     onHighlighted?: (element?: Element, step?: TourStep) => void;
 }
@@ -117,6 +186,13 @@ export interface TourConfig {
      * @default true
      */
     allowKeyboardControl?: boolean;
+    /**
+     * Maximum time in milliseconds to wait for an element to appear in the DOM.
+     * The tour will check for the element every 300ms until found or timeout is reached.
+     *
+     * @default 2000
+     */
+    maxSearchTimeout?: number;
     /**
      * Callback when the highlight starts.
      *
@@ -172,11 +248,6 @@ interface TourContextType {
     refresh: () => Promise<void>;
 }
 
-export interface TourProviderProps {
-    config: TourConfig;
-    children: React.ReactNode;
-}
-
 const TourContext = createContext<TourContextType | null>(null);
 
 function useTour() {
@@ -187,17 +258,84 @@ function useTour() {
     return context;
 }
 
-const getElement = (elementSelector: string | Element | (() => Element)): Element | undefined => {
-    if (typeof elementSelector === 'string') {
-        return document.querySelector(elementSelector) || undefined;
-    } else if (typeof elementSelector === 'function') {
-        return elementSelector();
-    } else {
-        return elementSelector;
+const getElement = async (
+    elementSelector: string | Element | (() => Element),
+    maxSearchTimeout: number = DEFAULT_MAX_SEARCH_TIMEOUT
+): Promise<Element | undefined> => {
+    const getElementSync = (): Element | undefined => {
+        if (typeof elementSelector === 'string') {
+            return document.querySelector(elementSelector) || undefined;
+        } else if (typeof elementSelector === 'function') {
+            return elementSelector();
+        } else {
+            return elementSelector;
+        }
+    };
+
+    // Try to get element immediately
+    let element = getElementSync();
+    if (element) {
+        return element;
     }
+
+    // If not found, retry every 300ms until maxSearchTimeout is reached
+    const startTime = Date.now();
+    const retryInterval = 300;
+
+    return new Promise<Element | undefined>((resolve) => {
+        const intervalId = setInterval(() => {
+            element = getElementSync();
+
+            if (element) {
+                clearInterval(intervalId);
+                resolve(element);
+                return;
+            }
+
+            // Check if timeout has been reached
+            if (Date.now() - startTime >= maxSearchTimeout) {
+                clearInterval(intervalId);
+                resolve(undefined);
+            }
+        }, retryInterval);
+    });
 };
 
-function TourProvider({ config: initialConfig, close, children }: TourProviderProps & { close: () => void }) {
+export interface TourProviderProps {
+    config: TourConfig;
+    open?: boolean;
+    defaultOpen?: boolean;
+    onOpenChange?: React.Dispatch<React.SetStateAction<boolean>>;
+    children: React.ReactNode;
+}
+
+function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialConfig }: TourProviderProps) {
+    const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
+
+    // Use controlled state if open prop is provided, otherwise use internal state
+    const isOpen = open !== undefined ? open : internalOpen;
+
+    const [state, setState] = useState<TourState | null>(null);
+
+    const setIsOpen = useCallback(
+        (value: boolean | ((prev: boolean) => boolean)) => {
+            const newValue = typeof value === 'function' ? value(isOpen) : value;
+
+            if (open === undefined) {
+                // Only update internal state if not controlled
+                setInternalOpen(newValue);
+            }
+
+            // if(!newValue) {
+            //     setState(null);
+            // }
+
+            // Always call onOpenChange if provided
+            onOpenChange?.(newValue);
+        },
+        [isOpen, open, onOpenChange]
+    );
+
     const config = useMemo<TourConfig>(
         () => ({
             animate: true, // TODO: make this configurable
@@ -207,12 +345,24 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
             stageRadius: 8,
             allowKeyboardControl: true,
             interactWithActiveElement: false,
+            maxSearchTimeout: DEFAULT_MAX_SEARCH_TIMEOUT,
             ...initialConfig,
         }),
         [initialConfig]
     );
 
-    const [state, setState] = useState<TourState | null>(null);
+    const popoverOpenChange = useCallback(
+        (value: boolean) => {
+            if ((config.interactWithActiveElement || state?.activeStep.interactWithActiveElement) && !value)
+                return;
+            setIsOpen(value);
+        },
+        [setIsOpen, config.interactWithActiveElement, state?.activeStep.interactWithActiveElement]
+    );
+
+    const close = useCallback(() => {
+        setIsOpen(false);
+    }, [setIsOpen]);
 
     const animationRef = useRef<number | undefined>(undefined);
 
@@ -302,7 +452,11 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
             cancelAnimationFrame(animationRef.current);
         }
 
-        if (state && config.interactWithActiveElement && state.activeElement) {
+        if (
+            state &&
+            (config.interactWithActiveElement || state.activeStep.interactWithActiveElement) &&
+            state.activeElement
+        ) {
             state.activeElement.classList.remove('tour-element-highlight');
         }
 
@@ -323,16 +477,26 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
             }
 
             const step = steps[stepIndex];
-            const element = step.element ? getElement(step.element) : undefined;
+
+            // Wait before attempting to find element if waitToGetElement is specified
+            if (step.waitToGetElement && step.waitToGetElement > 0) {
+                await new Promise((resolve) => setTimeout(resolve, step.waitToGetElement));
+            }
+
+            const element = step.element
+                ? await getElement(step.element, config.maxSearchTimeout || DEFAULT_MAX_SEARCH_TIMEOUT)
+                : undefined;
 
             if (!element && step.element) {
-                console.error('Element not found for tour step:', step.element);
+                if (!step.noErrorIfNotFound) {
+                    console.error('Element not found for tour step:', step.element);
+                }
                 return false;
             }
 
             // Add classes to new active element and scroll only if not center positioned
             if (element) {
-                if (config.interactWithActiveElement) {
+                if (config.interactWithActiveElement || step.interactWithActiveElement) {
                     document.querySelectorAll('.tour-element-highlight').forEach((el) => {
                         el.classList.remove('tour-element-highlight');
                     });
@@ -353,7 +517,14 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
                 stagePosition,
             };
         },
-        [config.steps, config.interactWithActiveElement, scrollToElement, calculateStagePosition]
+        [
+            config.steps,
+            config.interactWithActiveElement,
+            config.maxSearchTimeout,
+            scrollToElement,
+            calculateStagePosition,
+            close,
+        ]
     );
 
     const drive = useCallback(
@@ -407,18 +578,79 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
         }
     }, [config.steps, state, drive]);
 
+    // Re-add highlight class on interaction with active element
+    useEffect(() => {
+        if (
+            state &&
+            (config.interactWithActiveElement || state.activeStep.interactWithActiveElement) &&
+            state.activeElement
+        ) {
+            const element = state.activeElement;
+            const step = state.activeStep;
+            const timeoutIds: NodeJS.Timeout[] = [];
+
+            const handleInteraction = () => {
+                const timeoutId = setTimeout(() => {
+                    // element.classList.add('tour-element-highlight');
+                    document.querySelectorAll('.tour-element-highlight').forEach((el) => {
+                        el.classList.remove('tour-element-highlight');
+                    });
+                    element.classList.add('tour-element-highlight');
+                }, 1);
+                timeoutIds.push(timeoutId);
+            };
+
+            const handleClick = async (event: MouseEvent) => {
+                // Re-add highlight class
+                handleInteraction();
+
+                // Call onElementClick callback if provided
+                if (step.onElementClick) {
+                    await step.onElementClick(event, { element, step, moveNext });
+                }
+
+                // Move to next step if nextOnClick is enabled
+                if (step.nextOnClick) {
+                    await moveNext();
+                }
+            };
+
+            // Add event listeners for mouseup and mousedown
+            element.addEventListener('mouseup', handleInteraction);
+            element.addEventListener('mousedown', handleInteraction);
+
+            // Add click event listener with additional logic
+            element.addEventListener('click', handleClick as unknown as EventListener);
+
+            // Cleanup function to remove event listeners and clear timeouts
+            return () => {
+                element.removeEventListener('click', handleClick as unknown as EventListener);
+                element.removeEventListener('mouseup', handleInteraction);
+                element.removeEventListener('mousedown', handleInteraction);
+                timeoutIds.forEach((id) => clearTimeout(id));
+            };
+        }
+    }, [state, config.interactWithActiveElement, moveNext]);
+
     useEffect(() => {
         if (!config.allowKeyboardControl) return;
 
         const handleKeyDown = async (event: KeyboardEvent) => {
-            const escapePopoverFeatureDisabled = config.interactWithActiveElement;
-            if (config.allowClose && escapePopoverFeatureDisabled && event.key === 'Escape') {
+            if (config.allowClose && event.key === 'Escape') {
                 close();
             }
+
             switch (event.key) {
                 case 'ArrowRight':
                 case ' ':
                     event.preventDefault();
+
+                    const step = state?.activeStep;
+                    const isInteractive = config.interactWithActiveElement || step?.interactWithActiveElement;
+                    if(isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick)) {
+                        return;
+                    }
+
                     await moveNext();
                     break;
                 case 'ArrowLeft':
@@ -430,14 +662,7 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [
-        config.allowKeyboardControl,
-        config.allowClose,
-        config.interactWithActiveElement,
-        close,
-        moveNext,
-        movePrevious,
-    ]);
+    }, [config.allowKeyboardControl, config.allowClose, close, moveNext, movePrevious, state?.activeStep, config.interactWithActiveElement]);
 
     useEffect(() => {
         if (!state || !state.activeElement) return;
@@ -494,86 +719,60 @@ function TourProvider({ config: initialConfig, close, children }: TourProviderPr
         [config, state, moveNext, movePrevious, close]
     );
 
-    return state && contextValue ? (
-        <TourContext.Provider value={contextValue}>
-            {children}
-            {state.stagePosition && (
-                <PopoverAnchor asChild>
-                    <div
-                        id="tour-anchor"
-                        aria-hidden="true"
-                        className="pointer-events-none fixed"
-                        style={{
-                            left: `${state.stagePosition.x}px`,
-                            top: `${state.stagePosition.y}px`,
-                            width: `${state.stagePosition.width}px`,
-                            height: `${state.stagePosition.height}px`,
-                            zIndex: 998,
-                        }}
-                    />
-                </PopoverAnchor>
-            )}
-        </TourContext.Provider>
-    ) : null;
-}
-
-function TourRoot({
-    children,
-    defaultOpen,
-    open,
-    onOpenChange,
-    config: { interactWithActiveElement = false, ...config },
-    ...props
-}: TourProviderProps & {
-    open?: boolean;
-    defaultOpen?: boolean;
-    onOpenChange?: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
-    const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
-
-    // Use controlled state if open prop is provided, otherwise use internal state
-    const isOpen = open !== undefined ? open : internalOpen;
-
-    const setIsOpen = useCallback(
-        (value: boolean | ((prev: boolean) => boolean)) => {
-            const newValue = typeof value === 'function' ? value(isOpen) : value;
-
-            if (open === undefined) {
-                // Only update internal state if not controlled
-                setInternalOpen(newValue);
-            }
-
-            // Always call onOpenChange if provided
-            onOpenChange?.(newValue);
-        },
-        [isOpen, open, onOpenChange]
-    );
-
-    const popoverOpenChange = useCallback(
-        (value: boolean) => {
-            if (interactWithActiveElement && !value) return;
-            setIsOpen(value);
-        },
-        [setIsOpen, interactWithActiveElement]
-    );
-
-    const close = useCallback(() => {
-        setIsOpen(false);
-    }, [setIsOpen]);
-
     return (
         <Popover open={isOpen} onOpenChange={popoverOpenChange}>
+            {/* // <Popover open={isOpen} onOpenChange={popoverChangeSetter}> */}
             {isOpen ? (
-                <TourProvider
-                    close={close}
-                    config={{
-                        interactWithActiveElement,
-                        ...config,
-                    }}
-                    {...props}
-                >
-                    {children}
-                </TourProvider>
+                // <TourProvider
+                //     close={close}
+                //     // popoverOpenChange={popoverOpenChange}
+                //     // setPopoverChangeSetter={setPopoverChangeSetter}
+                //     config={{
+                //         interactWithActiveElement,
+                //         ...config,
+                //     }}
+                //     {...props}
+                // >
+                //     {children}
+                // </TourProvider>
+
+                <>
+                    {state && contextValue && (
+                        <TourContext.Provider value={contextValue}>
+                            {(config.interactWithActiveElement ||
+                                state.activeStep.interactWithActiveElement) && (
+                                <style id="tour-driver-style">
+                                    {`
+                * {
+                    pointer-events: none !important;
+                }
+                [data-slot="tour-content"], [data-slot="tour-content"] *, .tour-element-highlight, .tour-element-highlight * {
+                    pointer-events: auto !important;
+                }
+            `}
+                                </style>
+                            )}
+                            <div id="salut-tout-le-monde"></div>
+                            {children}
+                            {state.stagePosition && (
+                                <PopoverAnchor asChild>
+                                    <div
+                                        id="tour-anchor"
+                                        aria-hidden="true"
+                                        className="pointer-events-none fixed"
+                                        style={{
+                                            left: `${state.stagePosition.x}px`,
+                                            top: `${state.stagePosition.y}px`,
+                                            width: `${state.stagePosition.width}px`,
+                                            height: `${state.stagePosition.height}px`,
+                                            zIndex: 998,
+                                        }}
+                                    />
+                                </PopoverAnchor>
+                            )}
+                        </TourContext.Provider>
+                    )}
+                </>
             ) : (
                 children
             )}
@@ -596,6 +795,11 @@ interface TourFrameProps extends Omit<React.ComponentProps<typeof motion.div>, '
 function TourFrame(props: TourFrameProps) {
     const { state, config } = useTour();
     const p = config.stagePadding || 0;
+
+    // Hide if display includes 'noFrame'
+    if (state.activeStep.display?.includes('noFrame')) {
+        return null;
+    }
 
     return (
         <AnimatePresence>
@@ -663,13 +867,25 @@ function TourOverlay({
                 return;
             }
 
-            if (clickBehavior === 'close' && config.allowClose) {
+            if (
+                clickBehavior === 'close' &&
+                config.allowClose &&
+                !(state.activeStep.interactWithActiveElement || config.interactWithActiveElement)
+            ) {
                 close();
             } else if (clickBehavior === 'nextStep') {
                 moveNext();
             }
         },
-        [state.activeElement, clickBehavior, config.allowClose, close, moveNext]
+        [
+            state.activeElement,
+            clickBehavior,
+            config.allowClose,
+            close,
+            moveNext,
+            state.activeStep.interactWithActiveElement,
+            config.interactWithActiveElement,
+        ]
     );
 
     const generateStageSvgPathString = useCallback(
@@ -712,6 +928,27 @@ function TourOverlay({
         window.addEventListener('resize', update);
         return () => window.removeEventListener('resize', update);
     }, []);
+
+
+    // todo: instead of removing it in safari, fix the overlay mask to make it work in safari
+    // Detect Safari browser
+    const [isSafari, setIsSafari] = useState(false);
+    useEffect(() => {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isSafariBrowser =
+            userAgent.indexOf('safari') !== -1 &&
+            userAgent.indexOf('chrome') === -1 &&
+            userAgent.indexOf('chromium') === -1;
+        setIsSafari(isSafariBrowser);
+    }, []);
+    if (isSafari) {
+        return null;
+    }
+
+    // Hide if display includes 'noOverlay'
+    if (state.activeStep.display?.includes('noOverlay')) {
+        return null;
+    }
 
     return (
         <>
@@ -836,6 +1073,7 @@ function TourContent({
     children,
     sideOffset = 0,
     collisionPadding = 10,
+    closeIcon = true,
     ...props
 }: TourContentProps) {
     const { state, config } = useTour();
@@ -851,6 +1089,7 @@ function TourContent({
             {step.dialogDisplay && (
                 <div
                     className="animate-in fade-in-0"
+                    data-slot="tour-content"
                     style={{
                         zIndex: 1001,
                     }}
@@ -865,15 +1104,29 @@ function TourContent({
                         {...props}
                     >
                         {children as React.ReactNode}
+
+                        {closeIcon && (
+                            <TourClose asChild>
+                                <button
+                                    aria-label="Close"
+                                    className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+                                >
+                                    <Icon.x className="h-4 w-4" />
+                                    <span className="sr-only">Close</span>
+                                </button>
+                            </TourClose>
+                        )}
                     </div>
                 </div>
             )}
             <PopoverContent
+                data-slot="tour-content"
                 className={cn(
                     className,
                     'animate-in fade-in-0 zoom-in-95',
                     step.dialogDisplay && 'pointer-events-none hidden'
                 )}
+                closeIcon={false}
                 side={step.side}
                 align={step.align}
                 sideOffset={(config.stagePadding || 0) + sideOffset}
@@ -886,6 +1139,18 @@ function TourContent({
                 {...(step.dialogDisplay ? { onInteractOutside: (e) => e.preventDefault() } : {})}
             >
                 {children as React.ReactNode}
+
+                {closeIcon && (
+                    <TourClose asChild>
+                        <button
+                            aria-label="Close"
+                            className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+                        >
+                            <Icon.x className="h-4 w-4" />
+                            <span className="sr-only">Close</span>
+                        </button>
+                    </TourClose>
+                )}
             </PopoverContent>
         </RemoveScroll>
     );
@@ -894,6 +1159,11 @@ function TourContent({
 function TourTitle({ className, children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
     const { state } = useTour();
     const title = children || state.activeStep?.title;
+
+    // Hide if display includes 'noTitle'
+    if (state.activeStep.display?.includes('noTitle')) {
+        return null;
+    }
 
     return !title ? null : (
         <h3 className={cn('mb-2 text-lg font-semibold', className)} {...props}>
@@ -905,6 +1175,11 @@ function TourTitle({ className, children, ...props }: React.HTMLAttributes<HTMLH
 function TourDescription({ className, children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
     const { state } = useTour();
     const description = children || state.activeStep?.description;
+
+    // Hide if display includes 'noDescription'
+    if (state.activeStep.display?.includes('noDescription')) {
+        return null;
+    }
 
     return !description ? null : (
         <p className={cn('text-muted-foreground mb-4 text-sm', className)} {...props}>
@@ -929,6 +1204,11 @@ function TourProgress({
 }: TourProgressProps & Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>) {
     const { state, config } = useTour();
 
+    // Hide if display includes 'noProgress'
+    if (state.activeStep.display?.includes('noProgress')) {
+        return null;
+    }
+
     const steps = config.steps || [];
     const current = state.activeIndex + 1;
     const total = steps.length;
@@ -949,6 +1229,12 @@ function TourProgress({
 
 const TourArrow = ({ className, ...props }: React.ComponentProps<typeof PopoverArrow>) => {
     const { state } = useTour();
+
+    // Hide if display includes 'noArrow'
+    if (state.activeStep.display?.includes('noArrow')) {
+        return null;
+    }
+
     return state.activeStep?.dialogDisplay || !state.activeElement ? null : (
         <PopoverArrow {...props} className={cn('bg-background!', className)} />
     );
@@ -960,14 +1246,20 @@ export interface TourCloseProps {
 
 const TourClose = React.forwardRef<
     HTMLButtonElement,
-    TourCloseProps & Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
->(({ className, children, size = 'sm', variant = 'ghost', ...props }, ref) => {
+    TourCloseProps & Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick'>
+>(({ children, size = 'sm', variant = 'ghost', asChild, ...props }, ref) => {
+    const { close, state } = useTour();
+    const Comp = asChild ? Slot : Button;
+
+    // Hide if display includes 'noClose'
+    if (state.activeStep.display?.includes('noClose')) {
+        return null;
+    }
+
     return (
-        <PopoverClose ref={ref} asChild>
-            <Button variant={variant} size={size} className={cn(className)} aria-label="Skip" {...props}>
-                {children || 'Skip'}
-            </Button>
-        </PopoverClose>
+        <Comp ref={ref} variant={variant} size={size} onClick={close} aria-label="Skip" {...props}>
+            {children || 'Skip'}
+        </Comp>
     );
 });
 TourClose.displayName = 'TourClose';
@@ -991,6 +1283,11 @@ const TourPrevious = React.forwardRef<
         onClick?.(state.activeElement, step);
         await movePrevious();
     }, [state.activeStep, state.activeElement, config, movePrevious, onClick]);
+
+    // Hide if display includes 'noPrevious'
+    if (state.activeStep.display?.includes('noPrevious')) {
+        return null;
+    }
 
     return (
         <Button
@@ -1042,12 +1339,24 @@ const TourNext = React.forwardRef<
         }
     }, [state.activeStep, state.activeElement, config, isLastStep, close, moveNext, onClick]);
 
+    // Disable Next button when nextOnClick is enabled and interactWithActiveElement is true
+    const shouldDisable = useMemo(() => {
+        const step = state.activeStep;
+        const isInteractive = config.interactWithActiveElement || step?.interactWithActiveElement;
+        return !config.allowClose || disabled || (isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick));
+    }, [config.allowClose, config.interactWithActiveElement, disabled, state.activeStep]);
+
+    // Hide if display includes 'noNext'
+    if (state.activeStep.display?.includes('noNext')) {
+        return null;
+    }
+
     return (
         <Button
             ref={ref}
             aria-label="Next"
             onClick={handleNextClick}
-            disabled={!config.allowClose || disabled}
+            disabled={shouldDisable}
             className={cn(className)}
             variant={variant ?? 'default'}
             size={size ?? 'sm'}
@@ -1083,20 +1392,6 @@ function TourBase({ className, children, ...props }: React.HTMLAttributes<HTMLDi
             </TourContent>
         </TourPortal>
     );
-}
-
-const style = `
-.tour-element-highlight {
-    position: relative;
-    z-index: 1001;
-    pointer-events: auto;
-}
-`;
-
-if (typeof window !== 'undefined' && !document.head.querySelector('style[data-tour-driver]')) {
-    const styleSheet = document.createElement('style');
-    styleSheet.innerHTML = style;
-    document.head.appendChild(styleSheet);
 }
 
 export {

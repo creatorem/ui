@@ -1,99 +1,202 @@
 'use client';
 
 import { cn } from '@kit/shared';
-import React, {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useId,
-    useRef,
-    useState,
-} from 'react';
-
-const DEFAULT_GRADIENT_ID = 'cursorGradient';
-
-const DEFAULT_GLOW_PROPS: Required<GlowState> = {
-    color: '#ff6b6b',
-    radius: 250,
-    local: false,
-    id: DEFAULT_GRADIENT_ID,
-};
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 
 /**
- * A simple color string or a complex gradient array.
- *
- * ([color, offset] | [color,offset,opacity] | color)[]
+ * A simple color string or a complex gradient array for CSS radial-gradient.
  */
-type GradientColor = string | ([string, number] | [string, number, number] | string)[];
+type GradientColor = string | { color: string; stop: string }[];
 
 interface GlowContextType {
     color: GradientColor;
     setColor: React.Dispatch<React.SetStateAction<GradientColor>>;
-    isInitialized: boolean;
-    gradientIdURL: string;
-    initialGlow: Required<GlowState>;
-    local: boolean;
-    goBackToInitialColorOnMouseLeave?: boolean;
+    radius: number;
+    glowRadius: number;
+    opacity: number;
+    setOpacity: React.Dispatch<React.SetStateAction<number>>;
+    revertToInitialOnLeave?: boolean;
+    initialColor: GradientColor;
+    initialOpacity: number;
+    registerElement: (element: HTMLDivElement) => void;
+    unregisterElement: (element: HTMLDivElement) => void;
 }
 
 const GlowContext = createContext<GlowContextType | null>(null);
 
+/**
+ * Check if element requires glow update based on mouse position and glow radius
+ */
+// const requireGlowUpdate = (
+//     rect: DOMRect,
+//     mouseX: number,
+//     mouseY: number,
+//     glowRadius: number
+// ): boolean => {
+//     // Check if mouse is within element bounds + glowRadius
+//     const isWithinGlowRadius =
+//         mouseX >= rect.left - glowRadius &&
+//         mouseX <= rect.right + glowRadius &&
+//         mouseY >= rect.top - glowRadius &&
+//         mouseY <= rect.bottom + glowRadius;
+
+//     return isWithinGlowRadius;
+// };
+
+/**
+ * Update element glow CSS properties based on global mouse position
+ */
+const updateElementGlowProperties = (
+    el: HTMLDivElement,
+    mouseX: number,
+    mouseY: number,
+    glowRadius: number
+) => {
+    // Skip update if mouse is outside glow radius
+    const rect = el.getBoundingClientRect();
+    // this check slows down the glow effect
+    // if (!requireGlowUpdate(rect, mouseX, mouseY, glowRadius)) {
+    //     return;
+    // }
+
+    const relativeX = ((mouseX - rect.left) / rect.width) * 100;
+    const relativeY = ((mouseY - rect.top) / rect.height) * 100;
+
+    el.style.setProperty('--glow-x', `${relativeX}%`);
+    el.style.setProperty('--glow-y', `${relativeY}%`);
+    el.style.setProperty('--glow-radius', `${glowRadius}px`);
+};
+
 export interface GlowRootProps {
     children: ReactNode;
-    initialGlow?: GlowState;
     /**
-     * If true, the glow won't fit the page document boundaries but the shape of the closest relative parent.
+     * Initial glow color(s)
+     * @default '#8400ff'
      */
-    local?: boolean;
-    goBackToInitialColorOnMouseLeave?: boolean;
+    color?: GradientColor;
+    /**
+     * Glow radius in pixels
+     * @default 250
+     */
+    radius?: number;
+    /**
+     * Radial gradient radius in pixels (how far the glow effect extends)
+     * @default 250
+     */
+    glowRadius?: number;
+    /**
+     * Initial glow opacity (0-1)
+     * @default 1
+     */
+    opacity?: number;
+    /**
+     * If true, the glow will revert to initial color on mouse leave
+     */
+    revertToInitialOnLeave?: boolean;
 }
 
 const GlowRoot = ({
     children,
-    initialGlow: initialGlowProp,
-    goBackToInitialColorOnMouseLeave = false,
-    local = false,
+    color: initialColor = '#8400ff',
+    radius = 250,
+    glowRadius: initialGlowRadius,
+    opacity: initialOpacity = 1,
+    revertToInitialOnLeave = false,
 }: GlowRootProps) => {
-    const id = useId();
-    const initialGlow = { ...DEFAULT_GLOW_PROPS, ...initialGlowProp };
-    const [color, setColor] = useState(initialGlow.color!);
-    const [isInitialized, setIsInitialized] = useState(false);
+    const glowRadius = initialGlowRadius ?? radius;
+    const [color, setColor] = useState<GradientColor>(initialColor);
+    const [opacity, setOpacity] = useState(initialOpacity);
+    const elementsRef = useRef<Set<HTMLDivElement>>(new Set());
+
+    // Use refs to avoid recreating event listener
+    const opacityRef = useRef(opacity);
+    const radiusRef = useRef(radius);
+    const glowRadiusRef = useRef(glowRadius);
+
+    // Keep refs in sync
+    useEffect(() => {
+        opacityRef.current = opacity;
+    }, [opacity]);
 
     useEffect(() => {
-        const initialize = () => {
-            setIsInitialized(true);
-        };
+        radiusRef.current = radius;
+    }, [radius]);
 
-        window.addEventListener('load', initialize);
+    useEffect(() => {
+        glowRadiusRef.current = glowRadius;
+    }, [glowRadius]);
 
-        if (document.readyState === 'complete') {
-            initialize();
-        }
-
-        return () => {
-            window.removeEventListener('load', initialize);
-        };
+    const registerElement = useCallback((element: HTMLDivElement) => {
+        elementsRef.current.add(element);
     }, []);
 
-    const gradientId = (initialGlow.id ?? DEFAULT_GRADIENT_ID) + '-' + id;
+    const unregisterElement = useCallback((element: HTMLDivElement) => {
+        elementsRef.current.delete(element);
+    }, []);
+
+    // Track mouse position globally
+    const mousePositionRef = useRef({ x: 0, y: 0 });
+
+    // Single document-level mousemove listener that updates all glows
+    useEffect(() => {
+        const handleGlobalMouseMove = (e: MouseEvent) => {
+            const newPosition = { x: e.clientX, y: e.clientY };
+            mousePositionRef.current = newPosition;
+
+            // Update CSS variables for all registered elements
+            elementsRef.current.forEach((element) => {
+                updateElementGlowProperties(element, e.clientX, e.clientY, radiusRef.current);
+            });
+        };
+
+        const handleScroll = () => {
+            // On scroll, update all elements with current mouse position
+            // This ensures glow positions are recalculated after scroll
+            const currentPos = mousePositionRef.current;
+
+            elementsRef.current.forEach((element) => {
+                updateElementGlowProperties(element, currentPos.x, currentPos.y, radiusRef.current);
+            });
+        };
+
+        document.addEventListener('mousemove', handleGlobalMouseMove);
+        document.addEventListener('scroll', handleScroll, true); // Use capture phase to catch all scrolls
+
+        return () => {
+            document.removeEventListener('mousemove', handleGlobalMouseMove);
+            document.removeEventListener('scroll', handleScroll, true);
+        };
+    }, []); // No dependencies needed
+
+    // Update all elements when opacity or radius changes
+    useEffect(() => {
+        elementsRef.current.forEach((element) => {
+            updateElementGlowProperties(
+                element,
+                mousePositionRef.current.x,
+                mousePositionRef.current.y,
+                radiusRef.current
+            );
+        });
+    }, [opacity, radius]);
 
     return (
         <GlowContext.Provider
             value={{
                 color,
                 setColor,
-                isInitialized,
-                gradientIdURL: `url(#${gradientId})`,
-                initialGlow,
-                local,
-                goBackToInitialColorOnMouseLeave,
+                radius,
+                glowRadius,
+                opacity,
+                setOpacity,
+                revertToInitialOnLeave,
+                initialColor,
+                initialOpacity,
+                registerElement,
+                unregisterElement,
             }}
         >
-            {isInitialized && (
-                <GlowEffect local={local} radius={initialGlow.radius} id={gradientId} color={color} />
-            )}
             {children}
         </GlowContext.Provider>
     );
@@ -107,332 +210,214 @@ const useGlow = (): GlowContextType => {
     return context;
 };
 
-export interface GlowState {
-    radius?: number;
-    id?: string;
-    /**
-     * A simple color string or a complex gradient array.
-     *
-     * ([color, offset] | [color,offset,opacity] | color)[]
-     */
-    color?: GradientColor;
-    local?: boolean;
-}
+/**
+ * Convert gradient color to CSS radial-gradient string using CSS variables
+ * Intensity is handled via opacity, so colors are used as-is
+ * Hide the radial gradient by default.
+ */
+const generateRadialGradient = (color: GradientColor): string => {
+    const x = 'var(--glow-x, -100000000000px)';
+    const y = 'var(--glow-y, -100000000000px)';
+    const radius = 'var(--glow-radius, 250px)';
 
-const GradientStop = ({
-    item,
-    index,
-    totalItems,
-}: {
-    item: string | [string, number] | [string, number, number];
-    index: number;
-    totalItems: number;
-}) => {
-    const color = typeof item === 'string' ? item : item[0];
-    const definedOffset = typeof item === 'string' ? undefined : item[1];
-    const definedOpacity = typeof item === 'string' ? undefined : item[2];
-
-    const offset =
-        definedOffset ?? (index === 0 ? 0 : index === totalItems - 1 ? 1 : index / (totalItems - 1));
-
-    const opacity =
-        definedOpacity ?? (index === 0 ? 1 : index === totalItems - 1 ? 0 : 1 - index / (totalItems - 1));
-
-    return (
-        <stop
-            key={`${color}-${index}`}
-            stopColor={color}
-            offset={offset}
-            stopOpacity={opacity}
-            className="transition-all duration-400"
-        />
-    );
-};
-
-const GradientStops = React.memo(({ gradientColor }: { gradientColor: GradientColor }) => {
-    if (typeof gradientColor === 'string') {
-        return (
-            <>
-                <stop
-                    offset={0}
-                    stopColor={gradientColor}
-                    stopOpacity="1"
-                    className="transition-all duration-400"
-                />
-                <stop
-                    offset={1}
-                    className="transition-all duration-400"
-                    stopColor={gradientColor}
-                    stopOpacity="0"
-                />
-            </>
-        );
+    if (typeof color === 'string') {
+        return `radial-gradient(
+            circle at ${x} ${y},
+            ${color} 0%,
+            transparent ${radius} 100%
+        )`;
     }
 
-    return (
-        <>
-            {gradientColor.map((item, i) => (
-                <GradientStop key={`gradient-${i}`} item={item} index={i} totalItems={gradientColor.length} />
-            ))}
-        </>
-    );
-});
+    // Complex gradient: use provided stops
+    const stops = color.map((item) => `${item.color} ${item.stop}`).join(', ');
 
-GradientStops.displayName = 'GradientStops';
-
-const GlowEffect = ({
-    radius = DEFAULT_GLOW_PROPS.radius,
-    id = DEFAULT_GLOW_PROPS.id,
-    color: gradientColor = DEFAULT_GLOW_PROPS.color,
-    local = false,
-}: GlowState) => {
-    const [mousePagePosition, setMousePagePosition] = useState({ x: -radius - 100, y: -radius - 100 });
-    const [scrollingTranslate, setScrollingTranslate] = useState<null | {
-        originY: number;
-        positionY: number;
-        originX: number;
-        positionX: number;
-    }>(null);
-    const ref = useRef<SVGSVGElement>(null);
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            setScrollingTranslate(null);
-            if (local) {
-                const rect = ref.current?.getBoundingClientRect();
-                if (rect) {
-                    setMousePagePosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-                }
-            } else {
-                setMousePagePosition({ x: e.pageX, y: e.pageY });
-            }
-        };
-
-        const handleScroll = () => {
-            setScrollingTranslate((scrollinTr) =>
-                scrollinTr
-                    ? {
-                          ...scrollinTr,
-                          positionY: window.scrollY,
-                          positionX: window.scrollX,
-                      }
-                    : {
-                          originY: window.scrollY,
-                          positionY: window.scrollY,
-                          originX: window.scrollX,
-                          positionX: window.scrollX,
-                      }
-            );
-        };
-
-        document.addEventListener('scroll', handleScroll);
-        document.addEventListener('mousemove', handleMouseMove);
-
-        return () => {
-            document.removeEventListener('scroll', handleScroll);
-            document.removeEventListener('mousemove', handleMouseMove);
-        };
-    }, [local]);
-
-    return (
-        <svg ref={ref} width="0" height="0" className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <defs>
-                <radialGradient
-                    id={id}
-                    gradientUnits="userSpaceOnUse"
-                    cx={
-                        mousePagePosition.x +
-                        (scrollingTranslate ? scrollingTranslate.positionX - scrollingTranslate.originX : 0)
-                    }
-                    cy={
-                        mousePagePosition.y +
-                        (scrollingTranslate ? scrollingTranslate.positionY - scrollingTranslate.originY : 0)
-                    }
-                    r={radius}
-                >
-                    <GradientStops gradientColor={gradientColor} />
-                </radialGradient>
-            </defs>
-        </svg>
-    );
+    return `radial-gradient(${radius} circle at ${x} ${y}, ${stops})`;
 };
 
-const usePageViewBox = (
-    containerRef: React.RefObject<HTMLDivElement | SVGSVGElement | null>
-): { viewBox: [number, number, number, number] } => {
-    const { isInitialized, local } = useGlow();
-    const [viewBox, setViewBox] = useState<[number, number, number, number]>([0, 0, 0, 0]);
+// old version
+// export interface GlowingDivProps {
+//     /**
+//      * The border width/padding for the glow effect in pixels.
+//      * @default 6
+//      */
+//     borderWidth?: number;
+//     /**
+//      * The hover opacity of the glow (0-1).
+//      * @default 1
+//      */
+//     hoverOpacity?: number;
+//     /**
+//      * The hover color of the div.
+//      */
+//     hoverColor?: GradientColor;
+//     /**
+//      * If true, disables the background glow effect
+//      * @default false
+//      */
+//     noBackground?: boolean;
+//     /**
+//      * The opacity of the background glow effect (0-1)
+//      * @default 0.08
+//      */
+//     backgroundOpacity?: number;
+// }
 
-    const updateViewBox = useCallback(() => {
-        if (local) return
-        const container = containerRef.current;
-        if (!container) return;
-
-        const rect = container.getBoundingClientRect();
-        const viewBoxX = rect.left + window.scrollX;
-        const viewBoxY = rect.top + window.scrollY;
-        const width = rect.width;
-        const height = rect.height;
-        setViewBox([viewBoxX, viewBoxY, width, height]);
-    }, [containerRef,local]);
-
-    useEffect(() => {
-        if (isInitialized) {
-            updateViewBox();
-        }
-    }, [isInitialized, updateViewBox]);
-
-    return { viewBox };
-};
-
-const GlowSvg: React.FC<React.SVGProps<SVGSVGElement>> = ({ children, className,...props }) => {
-    const ref = useRef<SVGSVGElement>(null);
-    const { gradientIdURL, local } = useGlow();
-    const { viewBox } = usePageViewBox(ref);
-    const id = useId();
-
-    return (
-        <svg
-            ref={ref}
-            id={id}
-            width="0"
-            height="0"
-            className={cn("pointer-events-none absolute", className)}
-            aria-hidden="true"
-            stroke={gradientIdURL}
-            fill={gradientIdURL}
-            {...props}
-            viewBox={!local ? `${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}` : props.viewBox ?? undefined}
-        >
-            {children}
-        </svg>
-    );
-};
-
+// new version
 export interface GlowingDivProps {
     /**
-     * The border radius of the div.
-     *
-     * @default 8
-     */
-    borderRadius?: number;
-    /**
-     * The stroke width of the div.
-     *
-     * @default 2
-     */
-    strokeWidth?: number;
-    /**
-     * The fill opacity of the div.
-     *
-     * @default 0.1
-     */
-    fillOpacity?: number;
-    /**
-     * Whether to hide the background of the div.
-     *
+     * If true, disables the border glow effect
      * @default false
      */
-    hideBackground?: boolean;
+    noBorder?: boolean;
+    /**
+     * The border width/padding for the glow effect in pixels.
+     * @default 6
+     */
+    borderWidth?: number;
+    /**
+     * The hover opacity of the glow (0-1).
+     * @default 1
+     */
+    borderHoverOpacity?: number;
     /**
      * The hover color of the div.
      */
-    hoverColor?: GradientColor;
+    borderHoverColor?: GradientColor;
+    /**
+     * The class name of the border glow effect
+     * @default ''
+     */
+    borderClassName?: string;
+    /**
+     * If true, disables the background glow effect
+     * @default false
+     */
+    noBackground?: boolean;
+    /**
+     * The opacity of the background glow effect (0-1)
+     * @default 0.08
+     */
+    backgroundOpacity?: number;
+    /**
+     * The hover opacity of the background glow effect (0-1)
+     * @default 0.08
+     */
+    backgroundHoverOpacity?: number;
+    /**
+     * The class name of the background glow effect
+     * @default ''
+     */
+    backgroundClassName?: string;
 }
 
-const GlowingDiv = React.forwardRef<HTMLDivElement, GlowingDivProps & React.HTMLAttributes<HTMLDivElement>>(
+const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement>> = (
     (
         {
             children,
             className = '',
-            strokeWidth = 2,
-            borderRadius = 8,
-            fillOpacity = 0.1,
-            hideBackground = false,
-            hoverColor,
+            noBorder = false,
+            borderWidth = 6,
+            borderHoverOpacity = 1,
+            borderHoverColor,
+            borderClassName = '',
+            noBackground = false,
+            backgroundOpacity = 0.08,
+            backgroundHoverOpacity = 0.08,
+            backgroundClassName = '',
             onMouseEnter,
             onMouseLeave,
             style,
             ...props
-        },
-        ref
+        }
     ) => {
-        const svgRef = useRef<SVGSVGElement>(null);
-        const internalContainerRef = useRef<HTMLDivElement>(null);
-        const { gradientIdURL, setColor, initialGlow, goBackToInitialColorOnMouseLeave } = useGlow();
+        const glowLayerRef = useRef<HTMLDivElement>(null);
 
-        const containerRef = ref || internalContainerRef;
+        const {
+            color,
+            setColor,
+            opacity,
+            setOpacity,
+            revertToInitialOnLeave,
+            initialColor,
+            registerElement,
+            unregisterElement,
+            initialOpacity,
+        } = useGlow();
+
+        // Register/unregister element for global glow tracking
+        useEffect(() => {
+            if (glowLayerRef.current) {
+                registerElement(glowLayerRef.current);
+                return () => {
+                    if (glowLayerRef.current) {
+                        unregisterElement(glowLayerRef.current);
+                    }
+                };
+            }
+        }, [registerElement, unregisterElement]);
 
         const handleMouseEnter = useCallback(
             (e: React.MouseEvent<HTMLDivElement>) => {
                 onMouseEnter?.(e);
-                if (hoverColor) {
-                    setColor(hoverColor);
+                if (borderHoverOpacity) {
+                    setOpacity(borderHoverOpacity);
+                }
+                if (borderHoverColor) {
+                    setColor(borderHoverColor);
                 }
             },
-            [hoverColor, setColor, onMouseEnter]
+            [borderHoverColor, borderHoverOpacity, setColor, setOpacity, onMouseEnter]
         );
 
         const handleMouseLeave = useCallback(
             (e: React.MouseEvent<HTMLDivElement>) => {
                 onMouseLeave?.(e);
-                if (goBackToInitialColorOnMouseLeave) {
-                    setColor(initialGlow.color);
+                if (revertToInitialOnLeave) {
+                    setColor(initialColor);
+                    setOpacity(initialOpacity);
                 }
             },
-            [setColor, initialGlow.color, onMouseLeave, goBackToInitialColorOnMouseLeave]
+            [revertToInitialOnLeave, setOpacity, setColor, initialColor, onMouseLeave, initialOpacity]
         );
-
-        const { viewBox } = usePageViewBox(containerRef as React.RefObject<HTMLDivElement>);
 
         return (
             <div
-                ref={containerRef}
-                className={cn('relative', className)}
-                style={{
-                    ...style,
-                    borderRadius: borderRadius,
-                    borderWidth: strokeWidth,
-                }}
+                ref={glowLayerRef}
+                className={cn('absolute inset-0 rounded-[inherit]', className)}
+                style={style}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 {...props}
             >
-                <svg
-                    ref={svgRef}
-                    viewBox={`${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}`}
-                    className="pointer-events-none absolute"
-                    style={{
-                        inset: -strokeWidth,
-                    }}
-                >
-                    {!hideBackground && (
-                        <rect
-                            className="glow-fill"
-                            fill={gradientIdURL}
-                            fillOpacity={fillOpacity}
-                            rx={Math.max(0, borderRadius - strokeWidth)}
-                            x={viewBox[0] + strokeWidth}
-                            y={viewBox[1] + strokeWidth}
-                            width={Math.max(0, viewBox[2] - strokeWidth * 2)}
-                            height={Math.max(0, viewBox[3] - strokeWidth * 2)}
-                        />
-                    )}
-                    {strokeWidth > 0 && (
-                        <rect
-                            className="glow-border"
-                            fill="transparent"
-                            stroke={gradientIdURL}
-                            strokeWidth={strokeWidth}
-                            rx={Math.max(0, borderRadius - strokeWidth / 2)}
-                            x={viewBox[0] + strokeWidth / 2}
-                            y={viewBox[1] + strokeWidth / 2}
-                            width={Math.max(0, viewBox[2] - strokeWidth)}
-                            height={Math.max(0, viewBox[3] - strokeWidth)}
-                        />
-                    )}
-                </svg>
-
+                {/* Border glow effect layer */}
+                {!noBorder && (
+                    <motion.div
+                        // className={cn('absolute inset-0 rounded-[inherit] pointer-events-none transition-all duration-300 bg-border z-1', borderClassName)}
+                        className={cn('absolute inset-0 rounded-[inherit] pointer-events-none bg-border z-1', borderClassName)}
+                        style={{
+                            padding: `${borderWidth}px`,
+                            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                            maskComposite: 'subtract',
+                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                            WebkitMaskComposite: 'xor',
+                        }}
+                        animate={{
+                            backgroundImage: generateRadialGradient(color),
+                            opacity: opacity,
+                        }}
+                    />
+                )}
+                {/* Background glow effect */}
+                {!noBackground && (
+                    <motion.div
+                        // className={cn('absolute inset-0 z-0 rounded-[inherit] pointer-events-none transition-all duration-300', backgroundClassName)}
+                        className={cn('absolute inset-0 z-0 rounded-[inherit] pointer-events-none', backgroundClassName)}
+                        animate={{
+                            backgroundImage: generateRadialGradient(color),
+                            opacity: backgroundOpacity * opacity,
+                        }}
+                    />
+                )}
                 {children}
             </div>
         );
@@ -441,4 +426,4 @@ const GlowingDiv = React.forwardRef<HTMLDivElement, GlowingDivProps & React.HTML
 
 GlowingDiv.displayName = 'GlowingDiv';
 
-export { GlowRoot as Glow, GlowingDiv, GlowSvg, useGlow };
+export { GlowRoot as Glow, GlowingDiv, useGlow };
