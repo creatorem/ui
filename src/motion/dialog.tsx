@@ -273,6 +273,87 @@ const DialogMotionImage = React.forwardRef<HTMLImageElement, Omit<HTMLMotionProp
 
 DialogMotionImage.displayName = 'DialogMotionImage';
 
+interface DialogContentWrapperProps {
+    /**
+     * Whether to close the dialog when the content is clicked.
+     * @default 'close'
+     */
+    clickBehaviour?: 'none' | 'close';
+}
+
+const DialogContentWrapper: React.FC<
+    DialogContentWrapperProps & React.HTMLAttributes<HTMLDivElement> & React.PropsWithChildren
+> = ({
+    clickBehaviour = 'close',
+    children,
+    className: wrapperClassName,
+    style: wrapperStyle,
+    ...wrapper
+}) => {
+    const { transition: transitionDialog, dataOpen, presenceOpen } = useDialog();
+
+    return (
+        <AnimatePresence>
+            {presenceOpen && (
+                <RemoveScroll
+                    style={{
+                        ...wrapperStyle,
+                        ...createDurationVariables(transitionDialog.layout.duration),
+                        zIndex: Z_INDEX,
+                    }}
+                    data-slot="dialog-content-wrapper"
+                    data-open={dataOpen}
+                    className={cn(
+                        'group/dialog pointer-events-none fixed inset-0 flex h-screen w-screen overflow-auto overscroll-auto p-8',
+                        wrapperClassName
+                    )}
+                    {...wrapper}
+                >
+                    {children}
+                </RemoveScroll>
+            )}
+        </AnimatePresence>
+    );
+};
+
+interface DialogContentLayoutIdProps {
+    /**
+     * Whether to close the dialog when the content is clicked.
+     * @default 'close'
+     */
+    clickBehaviour?: 'none' | 'close';
+}
+
+const DialogContentLayoutId: React.FC<
+    DialogContentLayoutIdProps & Omit<HTMLMotionProps<'div'>, 'layoutId'> & React.PropsWithChildren
+> = ({ clickBehaviour = 'close', children, transition, className, ...props }) => {
+    const { id, transition: transitionDialog, dataOpen, setIsOpen } = useDialog();
+
+    const handleClick = useCallback(() => {
+        if (clickBehaviour === 'close') {
+            setIsOpen(false);
+        }
+    }, [clickBehaviour, setIsOpen]);
+
+    return (
+        <motion.div
+            layoutId={'dialog-content-' + id}
+            transition={{ ...transitionDialog, ...transition }}
+            data-slot="dialog-content"
+            data-open={dataOpen}
+            className={cn(
+                'pointer-events-auto m-auto max-w-[96vw] overflow-hidden rounded-2xl border shadow-2xl',
+                clickBehaviour === 'close' ? 'cursor-pointer' : 'cursor-default',
+                className
+            )}
+            onClick={handleClick}
+            {...props}
+        >
+            {children}
+        </motion.div>
+    );
+};
+
 export type DialogContentProps = {
     /**
      * Whether to close the dialog when the content is clicked.
@@ -285,68 +366,15 @@ export type DialogContentProps = {
     wrapper?: React.HTMLAttributes<HTMLDivElement>;
 };
 
-const DialogContent = React.forwardRef<
-    HTMLDivElement,
+const DialogContent: React.FC<
     DialogContentProps & Omit<HTMLMotionProps<'div'>, 'layoutId'> & React.PropsWithChildren
->(
-    (
-        {
-            clickBehaviour = 'close',
-            children,
-            transition,
-            wrapper: { className: wrapperClassName, style: wrapperStyle, ...wrapper } = {},
-            className,
-            ...props
-        },
-        ref
-    ) => {
-        const { id, transition: transitionDialog, dataOpen, setIsOpen, presenceOpen } = useDialog();
-
-        const handleClick = useCallback(() => {
-            if (clickBehaviour === 'close') {
-                setIsOpen(false);
-            }
-        }, [clickBehaviour, setIsOpen]);
-
-        return (
-            <AnimatePresence>
-                {presenceOpen && (
-                    <RemoveScroll
-                        style={{
-                            ...wrapperStyle,
-                            ...createDurationVariables(transitionDialog.layout.duration),
-                            zIndex: Z_INDEX,
-                        }}
-                        data-slot="dialog-content-wrapper"
-                        data-open={dataOpen}
-                        className={cn(
-                            'group/dialog pointer-events-none fixed inset-0 flex h-screen w-screen overflow-auto overscroll-auto p-8',
-                            wrapperClassName
-                        )}
-                        {...wrapper}
-                    >
-                        <motion.div
-                            layoutId={'dialog-content-' + id}
-                            transition={{ ...transitionDialog, ...transition }}
-                            data-slot="dialog-content"
-                            data-open={dataOpen}
-                            className={cn(
-                                'pointer-events-auto m-auto max-w-[96vw] overflow-hidden rounded-2xl border shadow-2xl',
-                                clickBehaviour === 'close' ? 'cursor-pointer' : 'cursor-default',
-                                className
-                            )}
-                            onClick={handleClick}
-                            {...props}
-                            ref={ref}
-                        >
-                            {children}
-                        </motion.div>
-                    </RemoveScroll>
-                )}
-            </AnimatePresence>
-        );
-    }
-);
+> = ({ children, wrapper = {}, ...props }) => {
+    return (
+        <DialogContentWrapper {...wrapper}>
+            <DialogContentLayoutId {...props}>{children}</DialogContentLayoutId>
+        </DialogContentWrapper>
+    );
+};
 
 DialogContent.displayName = 'DialogContent';
 
@@ -502,10 +530,13 @@ export {
     DialogAnimatePresenceDiv,
     DialogClose,
     DialogContent,
+    DialogContentWrapper,
+    DialogContentLayoutId,
     DialogMotionDiv,
     DialogMotionImage,
     DialogMotionImageWrapper,
     DialogOverlay,
     DialogPortal,
     DialogTrigger,
+    useDialog,
 };
