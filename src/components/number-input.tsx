@@ -357,11 +357,11 @@ NumberInputUnit.displayName = 'NumberInputUnit';
 /* _______Higher Level Component________ */
 
 export interface NumberInputProps extends Omit<NumberInputRootProps, 'children' | 'asChild'> {
-    controls: DragWheelControlsProps;
-    base: React.ComponentProps<typeof NumberInputBase>;
+    controls?: DragWheelControlsProps;
+    base?: React.ComponentProps<typeof NumberInputBase>;
 }
 
-const NumberInput: React.FC<NumberInputProps> = ({ controls, base, ...props }) => {
+const NumberInput: React.FC<NumberInputProps> = ({ controls = {}, base = {}, ...props }) => {
     return (
         <NumberInputRoot {...props} asChild>
             <DragWheelControls {...controls}>
