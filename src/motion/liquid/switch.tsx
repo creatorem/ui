@@ -257,7 +257,8 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
             className={cn('relative',className)}
             style={{
                 width: sliderWidth,
-                height: thumbHeight,
+                // height: thumbHeight,
+                height: sliderHeight,
                 ...style,
             }}
             onMouseMove={handleMouseMove}
@@ -272,7 +273,8 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
                     backgroundColor: backgroundColor,
                     borderRadius: sliderHeight / 2,
                     position: 'absolute',
-                    top: (thumbHeight - sliderHeight) / 2,
+                    top: 0,
+                    // top: (thumbHeight - sliderHeight) / 2,
                     cursor: 'pointer',
                 }}
                 onClick={handleClick}
