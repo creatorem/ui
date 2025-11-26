@@ -37,7 +37,7 @@ export interface TourStep {
     /**
      * The description of the step. Will be used as the popover description.
      */
-    description?: string;
+    description?: string | React.ReactNode;
     /**
      * When true, ignore the side and align properties and display the step as a dialog.
      *
