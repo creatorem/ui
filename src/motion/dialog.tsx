@@ -304,6 +304,7 @@ const DialogContentWrapper: React.FC<
                         zIndex: Z_INDEX,
                     }}
                     data-slot="dialog-content-wrapper"
+                    role="dialog"
                     data-open={dataOpen}
                     className={cn(
                         'group/dialog pointer-events-none fixed inset-0 flex h-screen w-screen overflow-auto overscroll-auto p-8',
