@@ -262,6 +262,8 @@ const DialogMotionImage = React.forwardRef<HTMLImageElement, Omit<HTMLMotionProp
                 transition={{ ...transitionDialog, ...transition }}
                 data-slot={'dialog-image'}
                 data-open={dataOpen}
+                rel="preload"
+                loading="eager"
                 className={cn('absolute inset-0 w-full object-cover', className)}
                 whileHover={animatedOpen || dataOpen ? undefined : whileHover}
                 {...props}
