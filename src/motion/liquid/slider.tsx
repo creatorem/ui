@@ -3,9 +3,7 @@
 import { cn } from '@kit/shared';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
-// import { LiquidFilter } from '@kit/ui/motion/';
 import { LiquidFilter } from './filter';
-// import { LiquidFilter } from '@kit/ui/motion/liquid/filter';
 
 interface WidthHeight {
     width?: number;
