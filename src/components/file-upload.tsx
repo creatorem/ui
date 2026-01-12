@@ -96,10 +96,10 @@ export const FileInput: React.FC<FileInputProps> = ({ idName, onFileChange, form
     return (
         <label
             htmlFor={'file-' + idName}
-            className="dark:hover:bg-bray-800 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+            className="bg-accent/10 hover:bg-accent/40 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed"
         >
             <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                <Icon.uploadCloud />
+                <Icon name="UploadCloud" />
                 <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                     {/* {t.rich('upload.title', {
                         span: (chunks) => <span className="font-semibold">{chunks}</span>,

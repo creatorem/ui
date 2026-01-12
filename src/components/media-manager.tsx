@@ -1,6 +1,5 @@
 'use client';
 
-import { cn, formatTimeDifference } from '@kit/shared';
 import { Badge } from '@kit/ui/badge';
 import { Button } from '@kit/ui/button';
 import { Checkbox } from '@kit/ui/checkbox';
@@ -13,9 +12,10 @@ import { Table, TableBody, TableCell, TableRow } from '@kit/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@kit/ui/tabs';
 import { Textarea } from '@kit/ui/textarea';
 import { VisuallyHidden } from '@kit/ui/visually-hidden';
+import { cn, formatTimeDifference, truncate } from '@kit/utils';
 import type { FileObject } from '@supabase/storage-js';
 import { useMutation } from '@tanstack/react-query';
-import { isEqual, truncate, upperCase } from 'lodash';
+import { isEqual, upperCase } from 'lodash';
 import Image from 'next/image';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -265,8 +265,8 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
     const isFormChanged = formData.alternativeText !== (focusedMedia.user_metadata?.alternativeText || '');
 
     return (
-        <div className="flex h-[600px] border-l">
-            <ScrollArea type="always" className="group h-full overflow-visible">
+        <div className="flex w-[300px] border-l">
+            <ScrollArea type="always" className="group h-full w-full overflow-visible">
                 <div className="flex w-full flex-col gap-y-2 p-6">
                     <div className="flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-md border bg-gray-50">
                         <Image
@@ -275,6 +275,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                             width={100}
                             height={100}
                             className="h-full max-h-[300px] w-full object-contain"
+                            unoptimized
                         />
                     </div>
 
@@ -309,15 +310,17 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                     </Button>
 
                     <div className="mt-4 rounded-md border">
-                        <Table>
+                        <Table className="w-full">
                             <TableBody>
-                                <TableRow className="border-b last:border-none hover:bg-white">
+                                <TableRow className="border-b last:border-none">
                                     <TableCell className="text-muted-foreground text-left text-xs whitespace-nowrap">
                                         Name
                                     </TableCell>
-                                    <TableCell className="text-right">{focusedMedia.name}</TableCell>
+                                    <TableCell className="text-right text-ellipsis">
+                                        {truncate(focusedMedia.name, { length: 20 })}
+                                    </TableCell>
                                 </TableRow>
-                                <TableRow className="border-b last:border-none hover:bg-white">
+                                <TableRow className="border-b last:border-none">
                                     <TableCell className="text-muted-foreground text-left text-xs whitespace-nowrap">
                                         Size
                                     </TableCell>
@@ -327,7 +330,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                             : '-'}
                                     </TableCell>
                                 </TableRow>
-                                <TableRow className="border-b last:border-none hover:bg-white">
+                                <TableRow className="border-b last:border-none">
                                     <TableCell className="text-muted-foreground text-left text-xs whitespace-nowrap">
                                         Created at
                                     </TableCell>
@@ -337,7 +340,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                             : '-'}
                                     </TableCell>
                                 </TableRow>
-                                <TableRow className="border-b last:border-none hover:bg-white">
+                                <TableRow className="border-b last:border-none">
                                     <TableCell className="text-muted-foreground text-left text-xs whitespace-nowrap">
                                         Updated at
                                     </TableCell>
@@ -347,7 +350,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                             : '-'}
                                     </TableCell>
                                 </TableRow>
-                                <TableRow className="border-b last:border-none hover:bg-white">
+                                <TableRow className="border-b last:border-none">
                                     <TableCell className="text-muted-foreground text-left text-xs whitespace-nowrap">
                                         Type
                                     </TableCell>
@@ -398,7 +401,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                             </>
                         ) : (
                             <>
-                                <Icon.trash className="h-4 w-4" />
+                                <Icon name="Trash" className="h-4 w-4" />
                                 Delete asset
                             </>
                         )}
@@ -552,22 +555,22 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
     return (
         <DialogContent
             {...props}
-            className={cn('w-[1200px] max-w-[90%] gap-0 p-0 sm:max-w-[90%]', className)}
+            className={cn('w-[1200px] max-w-[90%] gap-0 border p-0 sm:max-w-[90%]', className)}
         >
             <VisuallyHidden>
                 <DialogTitle>Media Manager</DialogTitle>
                 <DialogDescription className="text-sm">Manage your media assets</DialogDescription>
             </VisuallyHidden>
-            <Tabs value={tab} onValueChange={setTab as (value: string) => void}>
-                <div className="w-full border-b px-6 py-3">
+            <Tabs value={tab} onValueChange={setTab as (value: string) => void} className="gap-0">
+                <div className="w-full border-b px-2 py-2">
                     <TabsList>
                         <TabsTrigger value="manager">Manager</TabsTrigger>
                         <TabsTrigger value="import">Import</TabsTrigger>
                     </TabsList>
                 </div>
-                <div className="flex border-b">
+                <div className="flex h-[600px] max-h-[calc(100vh-140px)] border-b">
                     <TabsContent value="manager" className="mt-0 w-full">
-                        <div className="flex h-[600px] border-b">
+                        <div className="flex h-full">
                             {medias.length === 0 ? (
                                 <div
                                     className="flex h-full w-full cursor-pointer items-center justify-center"
@@ -577,7 +580,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                         <Empty className="rounded-lg transition-all duration-300">
                                             <EmptyHeader>
                                                 <EmptyMedia variant="icon">
-                                                    <Icon.imageUp className="size-6" />
+                                                    <Icon name="ImageUp" className="size-6" />
                                                 </EmptyMedia>
                                                 <EmptyTitle>No media found</EmptyTitle>
                                                 <EmptyDescription>
@@ -588,15 +591,15 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                     </div>
                                 </div>
                             ) : (
-                                <ScrollArea type="always" className="h-full flex-1">
+                                <ScrollArea type="always" className="flex-1">
                                     <div className="flex flex-1 flex-nowrap gap-4 p-6">
                                         {medias.map((media, index) => (
                                             <div
                                                 key={index}
                                                 className={
-                                                    'relative flex h-40 cursor-pointer items-center justify-center rounded-md border bg-gray-50 p-1' +
+                                                    'bg-foreground relative flex h-40 cursor-pointer items-center justify-center rounded-md border p-px' +
                                                     (focusedMedia?.id === media.id
-                                                        ? ' ring-ring ring-2 ring-offset-4 outline-hidden'
+                                                        ? ' outline-primary outline-2'
                                                         : '')
                                                 }
                                                 onClick={createSelector(media)}
@@ -606,7 +609,8 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                                     alt={media.user_metadata?.alternativeText || media.name}
                                                     width={100}
                                                     height={100}
-                                                    className="h-full w-auto max-w-full rounded-xs object-contain"
+                                                    className="h-full w-auto max-w-full rounded-[6px] object-contain"
+                                                    unoptimized
                                                 />
                                                 {multiple && (
                                                     <div className="absolute top-2 right-2">
@@ -633,7 +637,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                         </div>
                     </TabsContent>
                     <TabsContent value="import" className="mt-0 w-full">
-                        <div className="h-[600px] p-6">
+                        <div className="flex h-full max-h-full p-6">
                             {uploadMutation.isPending ? (
                                 <div className="flex h-full w-full items-center justify-center">
                                     <div className="block">
@@ -642,11 +646,17 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                         </h2>
                                         <ul className="text-muted-foreground max-w-md list-inside space-y-2">
                                             <li className="flex items-center">
-                                                <Icon.check className="me-2 h-4 w-4 text-green-500 dark:text-green-400" />
+                                                <Icon
+                                                    name="Check"
+                                                    className="me-2 h-4 w-4 text-green-500 dark:text-green-400"
+                                                />
                                                 Respect maximum file size
                                             </li>
                                             <li className="flex items-center">
-                                                <Icon.check className="me-2 h-4 w-4 text-green-500 dark:text-green-400" />
+                                                <Icon
+                                                    name="Check"
+                                                    className="me-2 h-4 w-4 text-green-500 dark:text-green-400"
+                                                />
                                                 Control file format
                                             </li>
                                             <li className="flex items-center">
@@ -670,9 +680,23 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                     </TabsContent>
                 </div>
                 <div className="flex w-full justify-end gap-x-4 p-6 py-4">
-                    <Button autoFocus variant="default" size={'sm'} onClick={save} aria-label="Select">
-                        Select
-                    </Button>
+                    {selection.length === 0 || !focusedMedia ? (
+                        <Button
+                            autoFocus
+                            aria-label="Close"
+                            variant="default"
+                            size={'sm'}
+                            onClick={() => {
+                                setIsOpen(false);
+                            }}
+                        >
+                            Close
+                        </Button>
+                    ) : (
+                        <Button autoFocus variant="default" size={'sm'} onClick={save} aria-label="Select">
+                            Select
+                        </Button>
+                    )}
                 </div>
             </Tabs>
         </DialogContent>
@@ -794,6 +818,7 @@ function DefaultImage<TMultiple extends boolean, TIsUrl extends boolean>({
             className={cn('h-full w-auto max-w-full rounded-md object-contain', className)}
             width={100}
             height={100}
+            unoptimized
         />
     );
 }
@@ -848,7 +873,7 @@ const MediaManagerTrigger = <TMultiple extends boolean, TIsUrl extends boolean>(
                     placeholder
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-1 pt-5 pb-6">
-                        <Icon.uploadCloud className="text-muted-foreground h-8 w-8" />
+                        <Icon name="UploadCloud" className="text-muted-foreground size-6" />
                         <Muted>Upload a file</Muted>
                         <Muted className="max-w-3/5 text-center text-xs">{formatString}</Muted>
                     </div>

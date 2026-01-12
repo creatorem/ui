@@ -1,4 +1,4 @@
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
 import React, { useCallback, useMemo } from 'react';
@@ -69,7 +69,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps & Omit<DropzoneOptions, 
                 children || (
                     <>
                         <div className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-full">
-                            <Icon.upload className="size-5 shrink-0" />
+                            <Icon name="Upload" className="size-5 shrink-0" />
                         </div>
                         <p className="mt-2 text-sm font-medium">{title}</p>
                         <p className="text-muted-foreground text-xs">{subtitle}</p>

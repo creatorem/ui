@@ -1,4 +1,4 @@
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 
 export interface SkeletonProps {
     /**

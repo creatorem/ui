@@ -5,7 +5,7 @@ import type { CSSProperties, FC } from 'react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { LiquidFilter } from './filter';
 import { LIP } from './liquid-lib';
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 
 interface WidthHeight {
     width?: number;

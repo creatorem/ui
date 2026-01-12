@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 

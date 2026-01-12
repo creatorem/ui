@@ -1,9 +1,9 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
+import { Icon } from '@kit/ui/icon';
 import { Portal } from '@kit/ui/portal';
 import { AnimatePresence, type Easing, HTMLMotionProps, motion, type Transition } from 'framer-motion';
-import { LucideX } from 'lucide-react';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 import { useDelay, useFnDelay } from '../hooks/use-delay';
@@ -521,7 +521,7 @@ const DialogClose = React.forwardRef<HTMLButtonElement, HTMLMotionProps<'button'
                     className
                 )}
             >
-                {children ?? <LucideX className="text-accent-foreground size-7" />}
+                {children ?? <Icon name="X" className="text-accent-foreground size-7" />}
             </motion.button>
         );
     }

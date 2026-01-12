@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import { Input } from '@kit/ui/input';
 import { Slot } from '@radix-ui/react-slot';
 import React, {

@@ -1,10 +1,10 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import { Button } from '@kit/ui/button';
+import { Icon } from '@kit/ui/icon';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
-import { DownloadIcon } from 'lucide-react';
 import QRCodeLib from 'qrcode';
 import React, { createContext, useCallback, useContext, useMemo } from 'react';
 
@@ -322,7 +322,7 @@ const QRCodeDownloadTrigger = React.forwardRef<
             >
                 {children ?? (
                   <>
-                  <DownloadIcon className="size-4" />
+                  <Icon name="Download" className="size-4" />
                   Download
                   </>
                 )}

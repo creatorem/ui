@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
 import {
@@ -1111,7 +1111,7 @@ function TourContent({
                                     aria-label="Close"
                                     className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
                                 >
-                                    <Icon.x className="h-4 w-4" />
+                                    <Icon name="X" className="h-4 w-4" />
                                     <span className="sr-only">Close</span>
                                 </button>
                             </TourClose>
@@ -1146,7 +1146,7 @@ function TourContent({
                             aria-label="Close"
                             className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
                         >
-                            <Icon.x className="h-4 w-4" />
+                            <Icon name="X" className="h-4 w-4" />
                             <span className="sr-only">Close</span>
                         </button>
                     </TourClose>

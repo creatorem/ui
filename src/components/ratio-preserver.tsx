@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import { Slot } from '@kit/ui/slot';
 import * as React from 'react';
 

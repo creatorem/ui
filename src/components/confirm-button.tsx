@@ -13,10 +13,10 @@ import { Button } from '@kit/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@kit/ui/form';
 import { Input } from '@kit/ui/input';
 import { Label } from '@kit/ui/label';
+import { useZodForm } from '@kit/utils/hooks/use-zod-form';
 import { Slot } from '@radix-ui/react-slot';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
-import { useZodForm } from '../hooks/use-zod-form';
 
 type ConfirmationOperationType = {
     type: 'write';
@@ -102,7 +102,7 @@ export interface ConfirmationButtonLabels {
      * @default 'Confirm'
      */
     confirm?: string;
-};
+}
 
 export type ConfirmationTemplate = 'delete';
 
@@ -168,6 +168,7 @@ export interface ConfirmButtonProps {
      * The labels for the buttons.
      */
     buttonLabels?: ConfirmationButtonLabels;
+    confirmButtonProps?: Omit<React.ComponentPropsWithoutRef<typeof Button>, 'children' | 'aria-label' | 'content'>;
 }
 
 export const ConfirmButton = React.forwardRef<
@@ -188,6 +189,7 @@ export const ConfirmButton = React.forwardRef<
                 cancel: 'Cancel',
                 confirm: 'Confirm',
             },
+            confirmButtonProps,
             ...buttonProps
         },
         ref
@@ -321,11 +323,12 @@ export const ConfirmButton = React.forwardRef<
                             <Button
                                 aria-label={buttonConfirmLabel ?? 'Confirm'}
                                 autoFocus
-                                variant="destructive"
+                                variant={templatekey === 'delete' ? 'destructive' : 'default'}
                                 size="sm"
                                 type="submit"
                                 onClick={handleDeletion}
                                 disabled={!isValidConfirmation || buttonProps.disabled}
+                                {...confirmButtonProps}
                             >
                                 {buttonConfirmLabel}
                             </Button>

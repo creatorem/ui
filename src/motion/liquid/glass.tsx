@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@kit/shared';
+import { cn } from '@kit/utils';
 import { motion, MotionValue, useMotionValue, useSpring, type HTMLMotionProps } from 'motion/react';
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef } from 'react';
 import { LiquidFilter, LiquidFilterProps } from './filter';
