@@ -73,12 +73,9 @@ const QRCodeRoot: React.FC<QRCodeRootProps & React.HTMLAttributes<HTMLDivElement
     defaultValue = '',
     errorCorrectionLevel = 'M',
     pixelSize = 4,
-    className,
     children,
     ...props
 }) => {
-    const Comp = asChild ? Slot : 'div';
-
     const qrValue = value ?? defaultValue;
 
     const matrix = useMemo(() => {
@@ -98,9 +95,7 @@ const QRCodeRoot: React.FC<QRCodeRootProps & React.HTMLAttributes<HTMLDivElement
 
     return (
         <QRCodeContext.Provider value={contextValue}>
-            <Comp className={cn('flex w-48 flex-col gap-4', className)} {...props}>
                 {children}
-            </Comp>
         </QRCodeContext.Provider>
     );
 };
