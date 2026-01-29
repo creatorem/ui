@@ -1,8 +1,8 @@
 'use client';
 
-import { cn } from '@kit/utils';
 import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
+import { cn } from '@kit/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
 import QRCodeLib from 'qrcode';
@@ -93,11 +93,7 @@ const QRCodeRoot: React.FC<QRCodeRootProps & React.HTMLAttributes<HTMLDivElement
         [qrValue, matrix, errorCorrectionLevel]
     );
 
-    return (
-        <QRCodeContext.Provider value={contextValue}>
-                {children}
-        </QRCodeContext.Provider>
-    );
+    return <QRCodeContext.Provider value={contextValue}>{children}</QRCodeContext.Provider>;
 };
 QRCodeRoot.displayName = 'QRCodeRoot';
 
@@ -316,10 +312,10 @@ const QRCodeDownloadTrigger = React.forwardRef<
                 {...props}
             >
                 {children ?? (
-                  <>
-                  <Icon name="Download" className="size-4" />
-                  Download
-                  </>
+                    <>
+                        <Icon name="Download" className="size-4" />
+                        Download
+                    </>
                 )}
             </Comp>
         );
@@ -327,4 +323,4 @@ const QRCodeDownloadTrigger = React.forwardRef<
 );
 QRCodeDownloadTrigger.displayName = 'QRCodeDownloadTrigger';
 
-export { QRCodeDownloadTrigger, QRCodeFrame, QRCodeOverlay, QRCodePattern, QRCodeRoot as QRCode };
+export { QRCodeRoot as QRCode, QRCodeDownloadTrigger, QRCodeFrame, QRCodeOverlay, QRCodePattern };

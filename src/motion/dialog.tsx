@@ -1,8 +1,8 @@
 'use client';
 
-import { cn } from '@kit/utils';
 import { Icon } from '@kit/ui/icon';
 import { Portal } from '@kit/ui/portal';
+import { cn } from '@kit/utils';
 import { AnimatePresence, type Easing, HTMLMotionProps, motion, type Transition } from 'framer-motion';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
@@ -533,8 +533,8 @@ export {
     DialogAnimatePresenceDiv,
     DialogClose,
     DialogContent,
-    DialogContentWrapper,
     DialogContentLayoutId,
+    DialogContentWrapper,
     DialogMotionDiv,
     DialogMotionImage,
     DialogMotionImageWrapper,

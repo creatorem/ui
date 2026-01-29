@@ -243,7 +243,7 @@ const GlowEffect = ({
             height="0"
             className="pointer-events-none absolute inset-0"
             aria-hidden="true"
-            id='glow-svg'
+            id="glow-svg"
         >
             <defs>
                 <radialGradient

@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from '@kit/utils';
 import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
 import {
@@ -12,6 +11,7 @@ import {
     PopoverTrigger,
 } from '@kit/ui/popover';
 import { RemoveScroll } from '@kit/ui/remove-scroll';
+import { cn } from '@kit/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { AnimatePresence, motion } from 'motion/react';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -647,7 +647,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
 
                     const step = state?.activeStep;
                     const isInteractive = config.interactWithActiveElement || step?.interactWithActiveElement;
-                    if(isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick)) {
+                    if (isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick)) {
                         return;
                     }
 
@@ -662,7 +662,15 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [config.allowKeyboardControl, config.allowClose, close, moveNext, movePrevious, state?.activeStep, config.interactWithActiveElement]);
+    }, [
+        config.allowKeyboardControl,
+        config.allowClose,
+        close,
+        moveNext,
+        movePrevious,
+        state?.activeStep,
+        config.interactWithActiveElement,
+    ]);
 
     useEffect(() => {
         if (!state || !state.activeElement) return;
@@ -928,7 +936,6 @@ function TourOverlay({
         window.addEventListener('resize', update);
         return () => window.removeEventListener('resize', update);
     }, []);
-
 
     // todo: instead of removing it in safari, fix the overlay mask to make it work in safari
     // Detect Safari browser
@@ -1343,7 +1350,11 @@ const TourNext = React.forwardRef<
     const shouldDisable = useMemo(() => {
         const step = state.activeStep;
         const isInteractive = config.interactWithActiveElement || step?.interactWithActiveElement;
-        return !config.allowClose || disabled || (isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick));
+        return (
+            !config.allowClose ||
+            disabled ||
+            (isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick))
+        );
     }, [config.allowClose, config.interactWithActiveElement, disabled, state.activeStep]);
 
     // Hide if display includes 'noNext'

@@ -168,7 +168,10 @@ export interface ConfirmButtonProps {
      * The labels for the buttons.
      */
     buttonLabels?: ConfirmationButtonLabels;
-    confirmButtonProps?: Omit<React.ComponentPropsWithoutRef<typeof Button>, 'children' | 'aria-label' | 'content'>;
+    confirmButtonProps?: Omit<
+        React.ComponentPropsWithoutRef<typeof Button>,
+        'children' | 'aria-label' | 'content'
+    >;
 }
 
 export const ConfirmButton = React.forwardRef<

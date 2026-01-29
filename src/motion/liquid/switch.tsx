@@ -1,11 +1,11 @@
 'use client';
 
+import { cn } from '@kit/utils';
 import { mix, motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import type { CSSProperties, FC } from 'react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { LiquidFilter } from './filter';
 import { LIP } from './liquid-lib';
-import { cn } from '@kit/utils';
 
 interface WidthHeight {
     width?: number;
@@ -43,13 +43,13 @@ export interface LiquidSwitchProps {
 
 // Size presets
 const SWITCH_SIZES = {
-    sm : {
+    sm: {
         thumb: { height: 30, width: 48 },
         slider: { height: 24, width: 60 },
         glassThickness: 24,
         bezelWidth: 10,
     },
-    md : {
+    md: {
         thumb: { height: 46, width: 73 },
         slider: { height: 34, width: 80 },
         glassThickness: 24,
@@ -99,7 +99,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
 }) => {
     // Get size configuration (fallback to 'md' if custom dimensions are provided without size)
     const sizeConfig = SWITCH_SIZES[size];
-    
+
     // Determine final dimensions and properties - custom values override size presets
     const thumbHeight = thumb?.height ?? sizeConfig.thumb.height;
     const thumbWidth = thumb?.width ?? sizeConfig.thumb.width;
@@ -108,7 +108,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
     const glassThickness = customGlassThickness ?? sizeConfig.glassThickness;
     const bezelWidth = customBezelWidth ?? sizeConfig.bezelWidth;
     const rawId = useId();
-    const filterId = 'switch-thumb_' + rawId
+    const filterId = 'switch-thumb_' + rawId;
     const thumbRadius = thumbHeight / 2;
     const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -136,75 +136,93 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
     }, [checked, checkedMotion]);
 
     // Event handlers
-    const handleToggle = useCallback((newChecked: boolean) => {
-        if (disabled) return;
+    const handleToggle = useCallback(
+        (newChecked: boolean) => {
+            if (disabled) return;
 
-        if (!isControlled) {
-            setInternalChecked(newChecked);
-        }
-        onCheckedChange?.(newChecked);
-    }, [disabled, isControlled, onCheckedChange]);
+            if (!isControlled) {
+                setInternalChecked(newChecked);
+            }
+            onCheckedChange?.(newChecked);
+        },
+        [disabled, isControlled, onCheckedChange]
+    );
 
-    const handlePointerDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-        if (disabled) return;
-        e.stopPropagation();
-        
-        const clientX = 'touches' in e ? e.touches[0]?.clientX ?? 0 : e.clientX;
-        pointerDown.set(1);
-        initialPointerX.set(clientX);
-    }, [disabled, pointerDown, initialPointerX]);
+    const handlePointerDown = useCallback(
+        (e: React.MouseEvent | React.TouchEvent) => {
+            if (disabled) return;
+            e.stopPropagation();
 
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-        if (!sliderRef.current || disabled || pointerDown.get() < 0.5) return;
-        e.stopPropagation();
-        
-        const baseRatio = checkedMotion.get();
-        const displacementX = e.clientX - initialPointerX.get();
-        const ratio = baseRatio + displacementX / TRAVEL;
-        const overflow = ratio < 0 ? -ratio : ratio > 1 ? ratio - 1 : 0;
-        const overflowSign = ratio < 0 ? -1 : 1;
-        const dampedOverflow = (overflowSign * overflow) / 22;
-        xDragRatio.set(Math.min(1, Math.max(0, ratio)) + dampedOverflow);
-    }, [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio]);
+            const clientX = 'touches' in e ? (e.touches[0]?.clientX ?? 0) : e.clientX;
+            pointerDown.set(1);
+            initialPointerX.set(clientX);
+        },
+        [disabled, pointerDown, initialPointerX]
+    );
 
-    const handleTouchMove = useCallback((e: React.TouchEvent) => {
-        if (!sliderRef.current || disabled || pointerDown.get() < 0.5) return;
-        e.stopPropagation();
-        
-        const baseRatio = checkedMotion.get();
-        const clientX = e.touches[0]?.clientX ?? 0;
-        const displacementX = clientX - initialPointerX.get();
-        const ratio = baseRatio + displacementX / TRAVEL;
-        const overflow = ratio < 0 ? -ratio : ratio > 1 ? ratio - 1 : 0;
-        const overflowSign = ratio < 0 ? -1 : 1;
-        const dampedOverflow = (overflowSign * overflow) / 22;
-        xDragRatio.set(Math.min(1, Math.max(0, ratio)) + dampedOverflow);
-    }, [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio]);
+    const handleMouseMove = useCallback(
+        (e: React.MouseEvent) => {
+            if (!sliderRef.current || disabled || pointerDown.get() < 0.5) return;
+            e.stopPropagation();
 
-    const handleClick = useCallback((e: React.MouseEvent) => {
-        if (disabled) return;
-        
-        const x = e.clientX;
-        const initialX = initialPointerX.get();
-        const distance = x - initialX;
-        if (Math.abs(distance) < 4) {
-            const shouldBeChecked = checkedMotion.get() < 0.5;
-            handleToggle(shouldBeChecked);
-        }
-    }, [disabled, initialPointerX, checkedMotion, handleToggle]);
+            const baseRatio = checkedMotion.get();
+            const displacementX = e.clientX - initialPointerX.get();
+            const ratio = baseRatio + displacementX / TRAVEL;
+            const overflow = ratio < 0 ? -ratio : ratio > 1 ? ratio - 1 : 0;
+            const overflowSign = ratio < 0 ? -1 : 1;
+            const dampedOverflow = (overflowSign * overflow) / 22;
+            xDragRatio.set(Math.min(1, Math.max(0, ratio)) + dampedOverflow);
+        },
+        [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio]
+    );
 
-    const handleGlobalPointerUp = useCallback((e: MouseEvent | TouchEvent) => {
-        pointerDown.set(0);
+    const handleTouchMove = useCallback(
+        (e: React.TouchEvent) => {
+            if (!sliderRef.current || disabled || pointerDown.get() < 0.5) return;
+            e.stopPropagation();
 
-        const x = e instanceof MouseEvent ? e.clientX : e.changedTouches[0]?.clientX ?? 0;
-        const distance = x - initialPointerX.get();
-        
-        if (Math.abs(distance) > 4) {
-            const dragRatio = xDragRatio.get();
-            const shouldBeChecked = dragRatio > 0.5;
-            handleToggle(shouldBeChecked);
-        }
-    }, [pointerDown, initialPointerX, xDragRatio, handleToggle]);
+            const baseRatio = checkedMotion.get();
+            const clientX = e.touches[0]?.clientX ?? 0;
+            const displacementX = clientX - initialPointerX.get();
+            const ratio = baseRatio + displacementX / TRAVEL;
+            const overflow = ratio < 0 ? -ratio : ratio > 1 ? ratio - 1 : 0;
+            const overflowSign = ratio < 0 ? -1 : 1;
+            const dampedOverflow = (overflowSign * overflow) / 22;
+            xDragRatio.set(Math.min(1, Math.max(0, ratio)) + dampedOverflow);
+        },
+        [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio]
+    );
+
+    const handleClick = useCallback(
+        (e: React.MouseEvent) => {
+            if (disabled) return;
+
+            const x = e.clientX;
+            const initialX = initialPointerX.get();
+            const distance = x - initialX;
+            if (Math.abs(distance) < 4) {
+                const shouldBeChecked = checkedMotion.get() < 0.5;
+                handleToggle(shouldBeChecked);
+            }
+        },
+        [disabled, initialPointerX, checkedMotion, handleToggle]
+    );
+
+    const handleGlobalPointerUp = useCallback(
+        (e: MouseEvent | TouchEvent) => {
+            pointerDown.set(0);
+
+            const x = e instanceof MouseEvent ? e.clientX : (e.changedTouches[0]?.clientX ?? 0);
+            const distance = x - initialPointerX.get();
+
+            if (Math.abs(distance) > 4) {
+                const dragRatio = xDragRatio.get();
+                const shouldBeChecked = dragRatio > 0.5;
+                handleToggle(shouldBeChecked);
+            }
+        },
+        [pointerDown, initialPointerX, xDragRatio, handleToggle]
+    );
 
     // Global pointer up listener
     useEffect(() => {
@@ -254,7 +272,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
 
     return (
         <div
-            className={cn('relative',className)}
+            className={cn('relative', className)}
             style={{
                 width: sliderWidth,
                 // height: thumbHeight,

@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from '@kit/utils';
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 /**
  * A simple color string or a complex gradient array for CSS radial-gradient.
@@ -310,119 +310,121 @@ export interface GlowingDivProps {
     backgroundClassName?: string;
 }
 
-const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement>> = (
-    (
-        {
-            children,
-            className = '',
-            noBorder = false,
-            borderWidth = 6,
-            borderHoverOpacity = 1,
-            borderHoverColor,
-            borderClassName = '',
-            noBackground = false,
-            backgroundOpacity = 0.08,
-            backgroundHoverOpacity = 0.08,
-            backgroundClassName = '',
-            onMouseEnter,
-            onMouseLeave,
-            style,
-            ...props
+const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement>> = ({
+    children,
+    className = '',
+    noBorder = false,
+    borderWidth = 6,
+    borderHoverOpacity = 1,
+    borderHoverColor,
+    borderClassName = '',
+    noBackground = false,
+    backgroundOpacity = 0.08,
+    backgroundHoverOpacity = 0.08,
+    backgroundClassName = '',
+    onMouseEnter,
+    onMouseLeave,
+    style,
+    ...props
+}) => {
+    const glowLayerRef = useRef<HTMLDivElement>(null);
+
+    const {
+        color,
+        setColor,
+        opacity,
+        setOpacity,
+        revertToInitialOnLeave,
+        initialColor,
+        registerElement,
+        unregisterElement,
+        initialOpacity,
+    } = useGlow();
+
+    // Register/unregister element for global glow tracking
+    useEffect(() => {
+        if (glowLayerRef.current) {
+            registerElement(glowLayerRef.current);
+            return () => {
+                if (glowLayerRef.current) {
+                    unregisterElement(glowLayerRef.current);
+                }
+            };
         }
-    ) => {
-        const glowLayerRef = useRef<HTMLDivElement>(null);
+    }, [registerElement, unregisterElement]);
 
-        const {
-            color,
-            setColor,
-            opacity,
-            setOpacity,
-            revertToInitialOnLeave,
-            initialColor,
-            registerElement,
-            unregisterElement,
-            initialOpacity,
-        } = useGlow();
-
-        // Register/unregister element for global glow tracking
-        useEffect(() => {
-            if (glowLayerRef.current) {
-                registerElement(glowLayerRef.current);
-                return () => {
-                    if (glowLayerRef.current) {
-                        unregisterElement(glowLayerRef.current);
-                    }
-                };
+    const handleMouseEnter = useCallback(
+        (e: React.MouseEvent<HTMLDivElement>) => {
+            onMouseEnter?.(e);
+            if (borderHoverOpacity) {
+                setOpacity(borderHoverOpacity);
             }
-        }, [registerElement, unregisterElement]);
+            if (borderHoverColor) {
+                setColor(borderHoverColor);
+            }
+        },
+        [borderHoverColor, borderHoverOpacity, setColor, setOpacity, onMouseEnter]
+    );
 
-        const handleMouseEnter = useCallback(
-            (e: React.MouseEvent<HTMLDivElement>) => {
-                onMouseEnter?.(e);
-                if (borderHoverOpacity) {
-                    setOpacity(borderHoverOpacity);
-                }
-                if (borderHoverColor) {
-                    setColor(borderHoverColor);
-                }
-            },
-            [borderHoverColor, borderHoverOpacity, setColor, setOpacity, onMouseEnter]
-        );
+    const handleMouseLeave = useCallback(
+        (e: React.MouseEvent<HTMLDivElement>) => {
+            onMouseLeave?.(e);
+            if (revertToInitialOnLeave) {
+                setColor(initialColor);
+                setOpacity(initialOpacity);
+            }
+        },
+        [revertToInitialOnLeave, setOpacity, setColor, initialColor, onMouseLeave, initialOpacity]
+    );
 
-        const handleMouseLeave = useCallback(
-            (e: React.MouseEvent<HTMLDivElement>) => {
-                onMouseLeave?.(e);
-                if (revertToInitialOnLeave) {
-                    setColor(initialColor);
-                    setOpacity(initialOpacity);
-                }
-            },
-            [revertToInitialOnLeave, setOpacity, setColor, initialColor, onMouseLeave, initialOpacity]
-        );
-
-        return (
-            <div
-                ref={glowLayerRef}
-                className={cn('absolute inset-0 rounded-[inherit]', className)}
-                style={style}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                {...props}
-            >
-                {/* Border glow effect layer */}
-                {!noBorder && (
-                    <motion.div
-                        // className={cn('absolute inset-0 rounded-[inherit] pointer-events-none transition-all duration-300 bg-border z-1', borderClassName)}
-                        className={cn('absolute inset-0 rounded-[inherit] pointer-events-none bg-border z-1', borderClassName)}
-                        style={{
-                            padding: `${borderWidth}px`,
-                            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                            maskComposite: 'subtract',
-                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                            WebkitMaskComposite: 'xor',
-                        }}
-                        animate={{
-                            backgroundImage: generateRadialGradient(color),
-                            opacity: opacity,
-                        }}
-                    />
-                )}
-                {/* Background glow effect */}
-                {!noBackground && (
-                    <motion.div
-                        // className={cn('absolute inset-0 z-0 rounded-[inherit] pointer-events-none transition-all duration-300', backgroundClassName)}
-                        className={cn('absolute inset-0 z-0 rounded-[inherit] pointer-events-none', backgroundClassName)}
-                        animate={{
-                            backgroundImage: generateRadialGradient(color),
-                            opacity: backgroundOpacity * opacity,
-                        }}
-                    />
-                )}
-                {children}
-            </div>
-        );
-    }
-);
+    return (
+        <div
+            ref={glowLayerRef}
+            className={cn('absolute inset-0 rounded-[inherit]', className)}
+            style={style}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            {...props}
+        >
+            {/* Border glow effect layer */}
+            {!noBorder && (
+                <motion.div
+                    // className={cn('absolute inset-0 rounded-[inherit] pointer-events-none transition-all duration-300 bg-border z-1', borderClassName)}
+                    className={cn(
+                        'bg-border pointer-events-none absolute inset-0 z-1 rounded-[inherit]',
+                        borderClassName
+                    )}
+                    style={{
+                        padding: `${borderWidth}px`,
+                        mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                        maskComposite: 'subtract',
+                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                        WebkitMaskComposite: 'xor',
+                    }}
+                    animate={{
+                        backgroundImage: generateRadialGradient(color),
+                        opacity: opacity,
+                    }}
+                />
+            )}
+            {/* Background glow effect */}
+            {!noBackground && (
+                <motion.div
+                    // className={cn('absolute inset-0 z-0 rounded-[inherit] pointer-events-none transition-all duration-300', backgroundClassName)}
+                    className={cn(
+                        'pointer-events-none absolute inset-0 z-0 rounded-[inherit]',
+                        backgroundClassName
+                    )}
+                    animate={{
+                        backgroundImage: generateRadialGradient(color),
+                        opacity: backgroundOpacity * opacity,
+                    }}
+                />
+            )}
+            {children}
+        </div>
+    );
+};
 
 GlowingDiv.displayName = 'GlowingDiv';
 

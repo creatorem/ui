@@ -1,6 +1,6 @@
-import { cn } from '@kit/utils';
 import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
+import { cn } from '@kit/utils';
 import React, { useCallback, useMemo } from 'react';
 import { useDropzone, type DropEvent, type DropzoneOptions, type FileRejection } from 'react-dropzone';
 
@@ -52,16 +52,20 @@ export const ImageDropzone: React.FC<ImageDropzoneProps & Omit<DropzoneOptions, 
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone(dropzoneOptions);
 
-    const borderRadiusClass = useMemo(() => ({
-        none: '',
-        sm: 'rounded-xs',
-        md: 'rounded-md',
-        lg: 'rounded-lg',
-        xl: 'rounded-xl',
-        '2xl': 'rounded-2xl',
-        '3xl': 'rounded-3xl',
-        full: 'rounded-full',
-    }[borderRadius]), [borderRadius]);
+    const borderRadiusClass = useMemo(
+        () =>
+            ({
+                none: '',
+                sm: 'rounded-xs',
+                md: 'rounded-md',
+                lg: 'rounded-lg',
+                xl: 'rounded-xl',
+                '2xl': 'rounded-2xl',
+                '3xl': 'rounded-3xl',
+                full: 'rounded-full',
+            })[borderRadius],
+        [borderRadius]
+    );
 
     const renderContent = useCallback(() => {
         if (!src) {

@@ -1,7 +1,7 @@
 'use client';
 
-import { cn } from '@kit/utils';
 import { Slot } from '@kit/ui/slot';
+import { cn } from '@kit/utils';
 import * as React from 'react';
 
 /* -------------------------------------------------------------------------------------------------
@@ -33,13 +33,13 @@ export interface RatioPreserverProps {
     height: number;
     children: React.ReactNode;
     className?: string;
-    asChild?: boolean
+    asChild?: boolean;
 }
 
 export function RatioPreserver({ width, height, children, className, asChild = false }: RatioPreserverProps) {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [scale, setScale] = React.useState(1);
-    const Comp = asChild ? Slot : 'div'
+    const Comp = asChild ? Slot : 'div';
 
     React.useEffect(() => {
         const container = containerRef.current;

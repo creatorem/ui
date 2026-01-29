@@ -3,18 +3,18 @@ import { cn } from '@kit/utils';
 export interface SkeletonProps {
     /**
      * Disable the shimmer animation.
-     * 
+     *
      * @default false
-    */
-   noShimmer?: boolean;
-   /**
+     */
+    noShimmer?: boolean;
+    /**
      * Display an animated shimmer border.
-     * 
+     *
      * @default false
      */
     shimmerBorder?: boolean;
     /**
-     * Used by the extra wrapper added when `shimmerBorder` is true 
+     * Used by the extra wrapper added when `shimmerBorder` is true
      */
     shimmerBorderClassName?: string;
 }
@@ -27,10 +27,7 @@ function Skeleton({
     style: styleProps,
     ...props
 }: SkeletonProps & React.ComponentProps<'div'>) {
-
-    const {
-        animationDelay,
-    } = styleProps || {};
+    const { animationDelay } = styleProps || {};
 
     const content = (
         <div
@@ -54,9 +51,9 @@ function Skeleton({
                 'animate-shimmer rounded-[9px] p-px [--shimmer-color:color-mix(in_oklab,var(--color-opposite)_40%,transparent_100%)]',
                 shimmerBorderClassName
             )}
-            style={{animationDelay}}
+            style={{ animationDelay }}
         >
-            <div className="bg-background rounded-md ">{content}</div>
+            <div className="bg-background rounded-md">{content}</div>
         </div>
     ) : (
         content

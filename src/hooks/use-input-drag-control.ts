@@ -19,7 +19,7 @@ const getStepValue = (
 
 /**
  * Get the inner y position of the window.
- * @param y 
+ * @param y
  * @returns The inner y position of the window.
  */
 const getWindowInnerYPosition = (y: number): number => {
@@ -32,7 +32,7 @@ const getWindowInnerYPosition = (y: number): number => {
 
 /**
  * Get the inner x position of the window.
- * @param x 
+ * @param x
  * @returns The inner x position of the window.
  */
 const getWindowInnerXPosition = (x: number): number => {
