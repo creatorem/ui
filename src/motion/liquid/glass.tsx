@@ -98,7 +98,7 @@ const useMotionSizeObservers = <T extends HTMLElement = HTMLDivElement>(
     useEffect(() => {
         if (!containerRef.current || disabled) return;
 
-        let timeoutId: NodeJS.Timeout;
+        let timeoutId: ReturnType<typeof setTimeout>;
         const mutationObserver = new MutationObserver(() => {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(updateDimensions, 100); // Debounce mutations

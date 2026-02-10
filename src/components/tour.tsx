@@ -574,7 +574,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
         ) {
             const element = state.activeElement;
             const step = state.activeStep;
-            const timeoutIds: NodeJS.Timeout[] = [];
+            const timeoutIds: ReturnType<typeof setTimeout>[] = [];
 
             const handleInteraction = () => {
                 const timeoutId = setTimeout(() => {
