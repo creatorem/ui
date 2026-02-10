@@ -98,7 +98,7 @@ export const LiquidSlider: React.FC<LiquidSliderProps> = ({
     const glassThickness = customGlassThickness ?? sizeConfig.glassThickness;
     const bezelWidth = customBezelWidth ?? sizeConfig.bezelWidth;
     const rawId = useId();
-    const filterId = 'slider-thumb_' + rawId;
+    const filterId = `slider-thumb_${rawId}`;
     const value = useMotionValue(controlledValue ?? defaultValue);
 
     // Update internal value when controlled value changes
@@ -142,7 +142,7 @@ export const LiquidSlider: React.FC<LiquidSliderProps> = ({
     const refractionBase = useMotionValue(1); // 0..1
     const pressMultiplier = useTransform(isUp, [0, 1], [0.4, 0.9]);
     const scaleRatio = useSpring(
-        useTransform([pressMultiplier, refractionBase], ([m, base]) => (Number(m) || 0) * (Number(base) || 0))
+        useTransform([pressMultiplier, refractionBase], ([m, base]) => (Number(m) || 0) * (Number(base) || 0)),
     );
 
     const trackRef = useRef<HTMLDivElement>(null);
@@ -244,8 +244,7 @@ export const LiquidSlider: React.FC<LiquidSliderProps> = ({
                 ...style,
             }}
         >
-            {(typeof controlledValue === 'number' || typeof defaultValue === 'number') &&
-            !controlledPosSet ? null : (
+            {(typeof controlledValue === 'number' || typeof defaultValue === 'number') && !controlledPosSet ? null : (
                 <>
                     <motion.div
                         ref={trackRef}

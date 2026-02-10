@@ -1,9 +1,9 @@
 'use client';
 
 import { createCanvas, type ImageData } from 'canvas';
-import { motion, MotionValue, useTransform } from 'motion/react';
+import { MotionValue, motion, useTransform } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { calculateRefractionSpecular, CONVEX, getDisplacementData, getValueOrMotion } from './liquid-lib';
+import { CONVEX, calculateRefractionSpecular, getDisplacementData, getValueOrMotion } from './liquid-lib';
 
 // function getBezier (bezelType: "convex_circle" | "convex_squircle" | "concave" | "lip") {
 //   let surfaceFn;
@@ -117,7 +117,7 @@ export const LiquidFilter: React.FC<LiquidFilterProps> = ({
         const devicePixelRatio = dpr ? getValueOrMotion(dpr) : 1;
         const clampedBezelWidth = Math.max(
             Math.min(getValueOrMotion(bezelWidthProp), 2 * getValueOrMotion(radius) - 1),
-            0
+            0,
         );
 
         return getDisplacementData({
@@ -143,7 +143,7 @@ export const LiquidFilter: React.FC<LiquidFilterProps> = ({
             getValueOrMotion(radius),
             50,
             undefined,
-            devicePixelRatio
+            devicePixelRatio,
         );
     });
 
@@ -159,9 +159,7 @@ export const LiquidFilter: React.FC<LiquidFilterProps> = ({
         <filter id={id}>
             <motion.feGaussianBlur
                 in={'SourceGraphic'}
-                stdDeviation={
-                    typeof blur === 'object' && 'get' in blur ? blur : useTransform(() => blur as number)
-                }
+                stdDeviation={typeof blur === 'object' && 'get' in blur ? blur : useTransform(() => blur as number)}
                 result="blurred_source"
             />
 
@@ -169,12 +167,8 @@ export const LiquidFilter: React.FC<LiquidFilterProps> = ({
                 href={displacementMapDataUrl}
                 x={0}
                 y={0}
-                width={useTransform(() =>
-                    canvasWidth ? getValueOrMotion(canvasWidth) : getValueOrMotion(width)
-                )}
-                height={useTransform(() =>
-                    canvasHeight ? getValueOrMotion(canvasHeight) : getValueOrMotion(height)
-                )}
+                width={useTransform(() => (canvasWidth ? getValueOrMotion(canvasWidth) : getValueOrMotion(width)))}
+                height={useTransform(() => (canvasHeight ? getValueOrMotion(canvasHeight) : getValueOrMotion(height)))}
                 result="displacement_map"
             />
 
@@ -198,21 +192,12 @@ export const LiquidFilter: React.FC<LiquidFilterProps> = ({
                 href={specularLayerDataUrl}
                 x={0}
                 y={0}
-                width={useTransform(() =>
-                    canvasWidth ? getValueOrMotion(canvasWidth) : getValueOrMotion(width)
-                )}
-                height={useTransform(() =>
-                    canvasHeight ? getValueOrMotion(canvasHeight) : getValueOrMotion(height)
-                )}
+                width={useTransform(() => (canvasWidth ? getValueOrMotion(canvasWidth) : getValueOrMotion(width)))}
+                height={useTransform(() => (canvasHeight ? getValueOrMotion(canvasHeight) : getValueOrMotion(height)))}
                 result="specular_layer"
             />
 
-            <feComposite
-                in="displaced_saturated"
-                in2="specular_layer"
-                operator="in"
-                result="specular_saturated"
-            />
+            <feComposite in="displaced_saturated" in2="specular_layer" operator="in" result="specular_saturated" />
 
             <feComponentTransfer in="specular_layer" result="specular_faded">
                 <motion.feFuncA type="linear" slope={useTransform(() => getValueOrMotion(specularOpacity))} />

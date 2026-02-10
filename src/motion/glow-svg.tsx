@@ -1,16 +1,7 @@
 'use client';
 
 import { cn } from '@kit/utils';
-import React, {
-    createContext,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useId,
-    useRef,
-    useState,
-} from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useId, useRef, useState } from 'react';
 
 const DEFAULT_GRADIENT_ID = 'cursorGradient';
 
@@ -77,7 +68,7 @@ const GlowRoot = ({
         };
     }, []);
 
-    const gradientId = (initialGlow.id ?? DEFAULT_GRADIENT_ID) + '-' + id;
+    const gradientId = `${initialGlow.id ?? DEFAULT_GRADIENT_ID}-${id}`;
 
     return (
         <GlowContext.Provider
@@ -91,9 +82,7 @@ const GlowRoot = ({
                 goBackToInitialColorOnMouseLeave,
             }}
         >
-            {isInitialized && (
-                <GlowEffect local={local} radius={initialGlow.radius} id={gradientId} color={color} />
-            )}
+            {isInitialized && <GlowEffect local={local} radius={initialGlow.radius} id={gradientId} color={color} />}
             {children}
         </GlowContext.Provider>
     );
@@ -132,11 +121,9 @@ const GradientStop = ({
     const definedOffset = typeof item === 'string' ? undefined : item[1];
     const definedOpacity = typeof item === 'string' ? undefined : item[2];
 
-    const offset =
-        definedOffset ?? (index === 0 ? 0 : index === totalItems - 1 ? 1 : index / (totalItems - 1));
+    const offset = definedOffset ?? (index === 0 ? 0 : index === totalItems - 1 ? 1 : index / (totalItems - 1));
 
-    const opacity =
-        definedOpacity ?? (index === 0 ? 1 : index === totalItems - 1 ? 0 : 1 - index / (totalItems - 1));
+    const opacity = definedOpacity ?? (index === 0 ? 1 : index === totalItems - 1 ? 0 : 1 - index / (totalItems - 1));
 
     return (
         <stop
@@ -153,18 +140,8 @@ const GradientStops = React.memo(({ gradientColor }: { gradientColor: GradientCo
     if (typeof gradientColor === 'string') {
         return (
             <>
-                <stop
-                    offset={0}
-                    stopColor={gradientColor}
-                    stopOpacity="1"
-                    className="transition-all duration-400"
-                />
-                <stop
-                    offset={1}
-                    className="transition-all duration-400"
-                    stopColor={gradientColor}
-                    stopOpacity="0"
-                />
+                <stop offset={0} stopColor={gradientColor} stopOpacity="1" className="transition-all duration-400" />
+                <stop offset={1} className="transition-all duration-400" stopColor={gradientColor} stopOpacity="0" />
             </>
         );
     }
@@ -221,7 +198,7 @@ const GlowEffect = ({
                           positionY: window.scrollY,
                           originX: window.scrollX,
                           positionX: window.scrollX,
-                      }
+                      },
             );
         };
 
@@ -267,7 +244,7 @@ const GlowEffect = ({
 };
 
 const usePageViewBox = (
-    containerRef: React.RefObject<HTMLDivElement | SVGSVGElement | null>
+    containerRef: React.RefObject<HTMLDivElement | SVGSVGElement | null>,
 ): { viewBox: [number, number, number, number] } => {
     const { isInitialized, local } = useGlow();
     const [viewBox, setViewBox] = useState<[number, number, number, number]>([0, 0, 0, 0]);
@@ -311,11 +288,7 @@ const GlowSvg: React.FC<React.SVGProps<SVGSVGElement>> = ({ children, className,
             stroke={gradientIdURL}
             fill={gradientIdURL}
             {...props}
-            viewBox={
-                !local
-                    ? `${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}`
-                    : (props.viewBox ?? undefined)
-            }
+            viewBox={!local ? `${viewBox[0]} ${viewBox[1]} ${viewBox[2]} ${viewBox[3]}` : (props.viewBox ?? undefined)}
         >
             {children}
         </svg>
@@ -368,7 +341,7 @@ const GlowingDiv = React.forwardRef<HTMLDivElement, GlowingDivProps & React.HTML
             style,
             ...props
         },
-        ref
+        ref,
     ) => {
         const svgRef = useRef<SVGSVGElement>(null);
         const internalContainerRef = useRef<HTMLDivElement>(null);
@@ -383,7 +356,7 @@ const GlowingDiv = React.forwardRef<HTMLDivElement, GlowingDivProps & React.HTML
                     setColor(hoverColor);
                 }
             },
-            [hoverColor, setColor, onMouseEnter]
+            [hoverColor, setColor, onMouseEnter],
         );
 
         const handleMouseLeave = useCallback(
@@ -393,7 +366,7 @@ const GlowingDiv = React.forwardRef<HTMLDivElement, GlowingDivProps & React.HTML
                     setColor(initialGlow.color);
                 }
             },
-            [setColor, initialGlow.color, onMouseLeave, goBackToInitialColorOnMouseLeave]
+            [setColor, initialGlow.color, onMouseLeave, goBackToInitialColorOnMouseLeave],
         );
 
         const { viewBox } = usePageViewBox(containerRef as React.RefObject<HTMLDivElement>);
@@ -449,7 +422,7 @@ const GlowingDiv = React.forwardRef<HTMLDivElement, GlowingDivProps & React.HTML
                 {children}
             </div>
         );
-    }
+    },
 );
 
 GlowingDiv.displayName = 'GlowingDiv';

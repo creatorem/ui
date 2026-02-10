@@ -90,7 +90,7 @@ const QRCodeRoot: React.FC<QRCodeRootProps & React.HTMLAttributes<HTMLDivElement
             size: matrix.length,
             errorCorrectionLevel,
         }),
-        [qrValue, matrix, errorCorrectionLevel]
+        [qrValue, matrix, errorCorrectionLevel],
     );
 
     return <QRCodeContext.Provider value={contextValue}>{children}</QRCodeContext.Provider>;
@@ -113,14 +113,14 @@ const QRCodeFrame = React.forwardRef<HTMLDivElement, QRCodeFrameProps & React.HT
                 ref={ref}
                 className={cn(
                     'relative inline-block aspect-square size-full border-8 border-white bg-white shadow-sm',
-                    className
+                    className,
                 )}
                 {...props}
             >
                 {children}
             </Comp>
         );
-    }
+    },
 );
 QRCodeFrame.displayName = 'QRCodeFrame';
 
@@ -153,12 +153,12 @@ const QRCodePattern = React.forwardRef<SVGSVGElement, Omit<React.SVGAttributes<S
                                 fill="currentColor"
                                 className="text-black"
                             />
-                        ) : null
-                    )
+                        ) : null,
+                    ),
                 )}
             </svg>
         );
-    }
+    },
 );
 
 QRCodePattern.displayName = 'QRCodePattern';
@@ -178,7 +178,7 @@ const qrCodeOverlayVariants = cva(
         defaultVariants: {
             size: 'md',
         },
-    }
+    },
 );
 
 export interface QRCodeOverlayProps {
@@ -193,18 +193,17 @@ export interface QRCodeOverlayProps {
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const QRCodeOverlay = React.forwardRef<
-    HTMLDivElement,
-    QRCodeOverlayProps & React.HTMLAttributes<HTMLDivElement>
->(({ asChild = false, size = 'md', className, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+const QRCodeOverlay = React.forwardRef<HTMLDivElement, QRCodeOverlayProps & React.HTMLAttributes<HTMLDivElement>>(
+    ({ asChild = false, size = 'md', className, children, ...props }, ref) => {
+        const Comp = asChild ? Slot : 'div';
 
-    return (
-        <Comp ref={ref} className={cn(qrCodeOverlayVariants({ size }), className)} {...props}>
-            {children}
-        </Comp>
-    );
-});
+        return (
+            <Comp ref={ref} className={cn(qrCodeOverlayVariants({ size }), className)} {...props}>
+                {children}
+            </Comp>
+        );
+    },
+);
 QRCodeOverlay.displayName = 'QRCodeOverlay';
 
 export interface QRCodeDownloadTriggerProps {
@@ -246,7 +245,7 @@ const QRCodeDownloadTrigger = React.forwardRef<
             children,
             ...props
         },
-        ref
+        ref,
     ) => {
         const { matrix, size } = useQRCode();
         const Comp = asChild ? Slot : Button;
@@ -295,12 +294,12 @@ const QRCodeDownloadTrigger = React.forwardRef<
                         URL.revokeObjectURL(url);
                     },
                     mimeType,
-                    quality
+                    quality,
                 );
 
                 onClick?.(event);
             },
-            [matrix, size, fileName, mimeType, quality, onClick]
+            [matrix, size, fileName, mimeType, quality, onClick],
         );
 
         return (
@@ -319,7 +318,7 @@ const QRCodeDownloadTrigger = React.forwardRef<
                 )}
             </Comp>
         );
-    }
+    },
 );
 QRCodeDownloadTrigger.displayName = 'QRCodeDownloadTrigger';
 

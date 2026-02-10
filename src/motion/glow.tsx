@@ -47,12 +47,7 @@ const GlowContext = createContext<GlowContextType | null>(null);
 /**
  * Update element glow CSS properties based on global mouse position
  */
-const updateElementGlowProperties = (
-    el: HTMLDivElement,
-    mouseX: number,
-    mouseY: number,
-    glowRadius: number
-) => {
+const updateElementGlowProperties = (el: HTMLDivElement, mouseX: number, mouseY: number, glowRadius: number) => {
     // Skip update if mouse is outside glow radius
     const rect = el.getBoundingClientRect();
     // this check slows down the glow effect
@@ -176,7 +171,7 @@ const GlowRoot = ({
                 element,
                 mousePositionRef.current.x,
                 mousePositionRef.current.y,
-                radiusRef.current
+                radiusRef.current,
             );
         });
     }, [opacity, radius]);
@@ -363,7 +358,7 @@ const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement
                 setColor(borderHoverColor);
             }
         },
-        [borderHoverColor, borderHoverOpacity, setColor, setOpacity, onMouseEnter]
+        [borderHoverColor, borderHoverOpacity, setColor, setOpacity, onMouseEnter],
     );
 
     const handleMouseLeave = useCallback(
@@ -374,7 +369,7 @@ const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement
                 setOpacity(initialOpacity);
             }
         },
-        [revertToInitialOnLeave, setOpacity, setColor, initialColor, onMouseLeave, initialOpacity]
+        [revertToInitialOnLeave, setOpacity, setColor, initialColor, onMouseLeave, initialOpacity],
     );
 
     return (
@@ -392,7 +387,7 @@ const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement
                     // className={cn('absolute inset-0 rounded-[inherit] pointer-events-none transition-all duration-300 bg-border z-1', borderClassName)}
                     className={cn(
                         'bg-border pointer-events-none absolute inset-0 z-1 rounded-[inherit]',
-                        borderClassName
+                        borderClassName,
                     )}
                     style={{
                         padding: `${borderWidth}px`,
@@ -411,10 +406,7 @@ const GlowingDiv: React.FC<GlowingDivProps & React.HTMLAttributes<HTMLDivElement
             {!noBackground && (
                 <motion.div
                     // className={cn('absolute inset-0 z-0 rounded-[inherit] pointer-events-none transition-all duration-300', backgroundClassName)}
-                    className={cn(
-                        'pointer-events-none absolute inset-0 z-0 rounded-[inherit]',
-                        backgroundClassName
-                    )}
+                    className={cn('pointer-events-none absolute inset-0 z-0 rounded-[inherit]', backgroundClassName)}
                     animate={{
                         backgroundImage: generateRadialGradient(color),
                         opacity: backgroundOpacity * opacity,

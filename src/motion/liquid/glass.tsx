@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@kit/utils';
-import { motion, MotionValue, useMotionValue, useSpring, type HTMLMotionProps } from 'motion/react';
+import { type HTMLMotionProps, MotionValue, motion, useMotionValue, useSpring } from 'motion/react';
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef } from 'react';
 import { LiquidFilter, LiquidFilterProps } from './filter';
 
@@ -20,7 +20,7 @@ const getBorderRadius = (element: HTMLElement, rect: DOMRect): number => {
 
     const parsedRadius = parseFloat(rawRadius);
 
-    if (isNaN(parsedRadius)) {
+    if (Number.isNaN(parsedRadius)) {
         return 0;
     }
 
@@ -35,7 +35,7 @@ const getBorderRadius = (element: HTMLElement, rect: DOMRect): number => {
 
 const useMotionSizeObservers = <T extends HTMLElement = HTMLDivElement>(
     containerRef: React.RefObject<T | null>,
-    disabled: boolean = false
+    disabled: boolean = false,
 ) => {
     // Use motion values with built-in spring animations and safe initial values
     // Lower stiffness and higher damping to prevent oscillations
@@ -276,5 +276,5 @@ const LiquidDiv = React.forwardRef<HTMLDivElement, { filterId: string } & HTMLMo
                 {children}
             </motion.div>
         );
-    }
+    },
 );

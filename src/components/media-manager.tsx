@@ -133,7 +133,7 @@ function MediaManager<TMultiple extends boolean, TIsUrl extends boolean>({
             setPath(path);
             onPathChange(path);
         },
-        [onPathChange]
+        [onPathChange],
     );
 
     return (
@@ -260,7 +260,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
     }, []);
 
     const isFormChanged = formData.alternativeText !== (focusedMedia.user_metadata?.alternativeText || '');
@@ -336,9 +336,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                         Created at
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {focusedMedia.created_at
-                                            ? formatTimeDifference(focusedMedia.created_at)
-                                            : '-'}
+                                        {focusedMedia.created_at ? formatTimeDifference(focusedMedia.created_at) : '-'}
                                     </TableCell>
                                 </TableRow>
                                 <TableRow className="border-b last:border-none">
@@ -346,9 +344,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                         Updated at
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {focusedMedia.updated_at
-                                            ? formatTimeDifference(focusedMedia.updated_at)
-                                            : '-'}
+                                        {focusedMedia.updated_at ? formatTimeDifference(focusedMedia.updated_at) : '-'}
                                     </TableCell>
                                 </TableRow>
                                 <TableRow className="border-b last:border-none">
@@ -357,9 +353,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                     </TableCell>
                                     <TableCell className="flex flex-wrap justify-end gap-2">
                                         {focusedMedia.user_metadata?.mimetype ? (
-                                            <Badge variant="outline">
-                                                {focusedMedia.user_metadata.mimetype}
-                                            </Badge>
+                                            <Badge variant="outline">{focusedMedia.user_metadata.mimetype}</Badge>
                                         ) : (
                                             '-'
                                         )}
@@ -388,9 +382,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
                                     length: 20,
                                     separator: ' ',
                                 }) +
-                                (focusedMedia.name.length > 20
-                                    ? '.' + (focusedMedia.name.split('.').at(-1) || '')
-                                    : '')
+                                (focusedMedia.name.length > 20 ? `.${focusedMedia.name.split('.').at(-1) || ''}` : '')
                             }" asset?`,
                         }}
                         className="mt-2 flex items-center justify-center gap-x-2"
@@ -456,7 +448,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                 }) || null
             );
         },
-        [medias, getUrl, path, normalizeUrl]
+        [medias, getUrl, path, normalizeUrl],
     );
 
     // Initialize selection based on current value when dialog opens or value changes
@@ -516,7 +508,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
         (media: ExtendedFileObject) => () => {
             setFocusedMedia((prev: ExtendedFileObject | null) => (isEqual(prev, media) ? null : media));
         },
-        []
+        [],
     );
 
     const toggleSelectionItem = useCallback(
@@ -527,7 +519,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                 setSelection((prev) => prev.filter((a) => a.id !== media.id));
             }
         },
-        []
+        [],
     );
 
     const uploadMutation = useMutation({
@@ -554,10 +546,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
     });
 
     return (
-        <DialogContent
-            {...props}
-            className={cn('w-[1200px] max-w-[90%] gap-0 border p-0 sm:max-w-[90%]', className)}
-        >
+        <DialogContent {...props} className={cn('w-[1200px] max-w-[90%] gap-0 border p-0 sm:max-w-[90%]', className)}>
             <VisuallyHidden>
                 <DialogTitle>Media Manager</DialogTitle>
                 <DialogDescription className="text-sm">Manage your media assets</DialogDescription>
@@ -584,9 +573,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                                     <Icon name="ImageUp" className="size-6" />
                                                 </EmptyMedia>
                                                 <EmptyTitle>No media found</EmptyTitle>
-                                                <EmptyDescription>
-                                                    Upload a file to get started.
-                                                </EmptyDescription>
+                                                <EmptyDescription>Upload a file to get started.</EmptyDescription>
                                             </EmptyHeader>
                                         </Empty>
                                     </div>
@@ -599,9 +586,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                                 key={index}
                                                 className={
                                                     'bg-foreground relative flex h-40 cursor-pointer items-center justify-center rounded-md border p-px' +
-                                                    (focusedMedia?.id === media.id
-                                                        ? ' outline-primary outline-2'
-                                                        : '')
+                                                    (focusedMedia?.id === media.id ? ' outline-primary outline-2' : '')
                                                 }
                                                 onClick={createSelector(media)}
                                             >
@@ -618,9 +603,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                                         <Checkbox
                                                             className="bg-gray-50"
                                                             onCheckedChange={toggleSelectionItem(media)}
-                                                            checked={selection
-                                                                .map((s) => s.id)
-                                                                .includes(media.id)}
+                                                            checked={selection.map((s) => s.id).includes(media.id)}
                                                         />
                                                     </div>
                                                 )}
@@ -661,7 +644,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                                 Control file format
                                             </li>
                                             <li className="flex items-center">
-                                                <div role="state">
+                                                <div>
                                                     <Spinner size="small" show />
                                                     <span className="sr-only">Loading</span>
                                                 </div>
@@ -754,7 +737,7 @@ function DefaultImage<TMultiple extends boolean, TIsUrl extends boolean>({
                 }) || null
             );
         },
-        [isUrl, medias, getUrl, path, normalizeUrl]
+        [isUrl, medias, getUrl, path, normalizeUrl],
     );
 
     const getImageSrc = useCallback(() => {
@@ -861,7 +844,7 @@ const MediaManagerTrigger = <TMultiple extends boolean, TIsUrl extends boolean>(
                 className={cn(
                     'bg-background outline-border hover:bg-accent hover:outline-primary m-1 flex h-64 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg outline-offset-2 outline-dashed',
                     disabled ? 'pointer-events-none' : '',
-                    className
+                    className,
                 )}
             >
                 {hasValue ? (
@@ -893,7 +876,7 @@ const MediaManagerSkeleton = ({ className }: MediaManagerSkeletonProps) => {
         <div
             className={cn(
                 'bg-background outline-border hover:bg-accent hover:outline-primary mt-1 flex h-64 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg outline-offset-2 outline-dashed',
-                className
+                className,
             )}
         >
             <div className="flex flex-col items-center justify-center space-y-3 pt-5 pb-6">

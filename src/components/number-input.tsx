@@ -3,15 +3,7 @@
 import { Input } from '@kit/ui/input';
 import { cn } from '@kit/utils';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-    createContext,
-    forwardRef,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
+import React, { createContext, forwardRef, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useInputDragControl } from '../hooks/use-input-drag-control';
 
 interface NumberInputContextValue {
@@ -77,7 +69,7 @@ const NumberInputRoot = forwardRef<HTMLDivElement, NumberInputRootProps & React.
             className,
             ...props
         },
-        ref
+        ref,
     ) => {
         const Comp = asChild ? Slot : 'div';
         const prevPropValueRef = useRef(propValue);
@@ -99,7 +91,7 @@ const NumberInputRoot = forwardRef<HTMLDivElement, NumberInputRootProps & React.
                 // Always call onOpenChange if provided
                 onValueChange?.(newValue);
             },
-            [finalValue, propValue, onValueChange]
+            [finalValue, propValue, onValueChange],
         );
 
         // Sync with controlled prop value
@@ -126,7 +118,7 @@ const NumberInputRoot = forwardRef<HTMLDivElement, NumberInputRootProps & React.
                 </Comp>
             </NumberInputContext.Provider>
         );
-    }
+    },
 );
 NumberInputRoot.displayName = 'NumberInputRoot';
 
@@ -168,10 +160,7 @@ export interface DragWheelControlsProps {
     dragDirection?: 'vertical' | 'horizontal';
 }
 
-const DragWheelControls = forwardRef<
-    HTMLDivElement,
-    DragWheelControlsProps & React.HTMLAttributes<HTMLDivElement>
->(
+const DragWheelControls = forwardRef<HTMLDivElement, DragWheelControlsProps & React.HTMLAttributes<HTMLDivElement>>(
     (
         {
             children,
@@ -185,7 +174,7 @@ const DragWheelControls = forwardRef<
             className,
             ...props
         },
-        ref
+        ref,
     ) => {
         const Comp = asChild ? Slot : 'div';
         const { value, onValueChange, min, max, step } = useNumberInputContext();
@@ -245,11 +234,7 @@ const DragWheelControls = forwardRef<
                 }}
                 onMouseDown={!disableDrag ? handleMouseDown : undefined}
                 style={{
-                    cursor: isDragging
-                        ? dragDirection === 'horizontal'
-                            ? 'ew-resize'
-                            : 'ns-resize'
-                        : 'default',
+                    cursor: isDragging ? (dragDirection === 'horizontal' ? 'ew-resize' : 'ns-resize') : 'default',
                 }}
                 className={cn('flex items-center gap-2', className)}
                 {...props}
@@ -257,7 +242,7 @@ const DragWheelControls = forwardRef<
                 {children}
             </Comp>
         );
-    }
+    },
 );
 DragWheelControls.displayName = 'DragWheelControls';
 
@@ -274,7 +259,7 @@ const NumberInputBase = forwardRef<
             const newValue = event.target.value === '' ? '' : Number(event.target.value);
             onValueChange(newValue);
         },
-        [onValueChange]
+        [onValueChange],
     );
 
     const handleBlur = useCallback(() => {
@@ -298,7 +283,7 @@ const NumberInputBase = forwardRef<
                 onValueChange(clampedValue);
             }
         },
-        [value, step, min, max, onValueChange]
+        [value, step, min, max, onValueChange],
     );
 
     return (
@@ -331,27 +316,22 @@ export interface NumberInputUnitProps {
     asChild?: boolean;
 }
 
-const NumberInputUnit = forwardRef<
-    HTMLDivElement,
-    NumberInputUnitProps & React.HTMLAttributes<HTMLDivElement>
->(({ className, children, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
-    const { unit } = useNumberInputContext();
+const NumberInputUnit = forwardRef<HTMLDivElement, NumberInputUnitProps & React.HTMLAttributes<HTMLDivElement>>(
+    ({ className, children, asChild = false, ...props }, ref) => {
+        const Comp = asChild ? Slot : 'div';
+        const { unit } = useNumberInputContext();
 
-    const displayUnit = children || unit;
+        const displayUnit = children || unit;
 
-    if (!displayUnit) return null;
+        if (!displayUnit) return null;
 
-    return (
-        <Comp
-            ref={ref}
-            className={cn('text-muted-foreground text-sm whitespace-nowrap', className)}
-            {...props}
-        >
-            {displayUnit}
-        </Comp>
-    );
-});
+        return (
+            <Comp ref={ref} className={cn('text-muted-foreground text-sm whitespace-nowrap', className)} {...props}>
+                {displayUnit}
+            </Comp>
+        );
+    },
+);
 NumberInputUnit.displayName = 'NumberInputUnit';
 
 /* _______Higher Level Component________ */

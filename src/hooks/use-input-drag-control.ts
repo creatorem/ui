@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const getStepValue = (
-    e: MouseEvent | React.WheelEvent | React.KeyboardEvent,
-    lockToStep: boolean
-): number => {
+const getStepValue = (e: MouseEvent | React.WheelEvent | React.KeyboardEvent, lockToStep: boolean): number => {
     let step = 1;
     if (e.ctrlKey) {
         step = 100;
@@ -118,7 +115,7 @@ export const useInputDragControl = ({
             setXLocation(startX);
             setYLocation(startY);
 
-            let initialValue = currentValue;
+            const initialValue = currentValue;
             let delta = 0;
             let hasMoved = false;
             const moveThreshold = 3; // pixels threshold to start dragging
@@ -192,7 +189,7 @@ export const useInputDragControl = ({
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
         },
-        [step, min, max, onDrag, containerRef, dragScale, lockToStep]
+        [step, min, max, onDrag, containerRef, dragScale, lockToStep],
     );
 
     // Handle custom cursor
@@ -201,8 +198,8 @@ export const useInputDragControl = ({
         if (isDragging) {
             if (cursor) {
                 if (document.pointerLockElement) {
-                    cursor.style.top = yLocation + 'px';
-                    cursor.style.left = xLocation + 'px';
+                    cursor.style.top = `${yLocation}px`;
+                    cursor.style.left = `${xLocation}px`;
                     cursor.style.transform = `${dragDirection === 'horizontal' ? 'rotate(90deg)' : 'rotate(0deg)'}`;
                 }
             } else {
@@ -223,8 +220,8 @@ export const useInputDragControl = ({
                     transform: ${dragDirection === 'horizontal' ? 'rotate(90deg)' : 'rotate(0deg)'};
                 `;
                 document.body.append(createdCursor);
-                createdCursor.style.top = yLocation + 'px';
-                createdCursor.style.left = xLocation + 'px';
+                createdCursor.style.top = `${yLocation}px`;
+                createdCursor.style.left = `${xLocation}px`;
             }
         } else if (cursor) {
             cursor.remove();

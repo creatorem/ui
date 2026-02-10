@@ -2,14 +2,7 @@
 
 import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
-import {
-    Popover,
-    PopoverAnchor,
-    PopoverArrow,
-    PopoverContent,
-    PopoverPortal,
-    PopoverTrigger,
-} from '@kit/ui/popover';
+import { Popover, PopoverAnchor, PopoverArrow, PopoverContent, PopoverPortal, PopoverTrigger } from '@kit/ui/popover';
 import { RemoveScroll } from '@kit/ui/remove-scroll';
 import { cn } from '@kit/utils';
 import { Slot } from '@radix-ui/react-slot';
@@ -50,21 +43,21 @@ export interface TourStep {
      * @default 'center'
      */
     dialogPosition?:
-        | 'top-left'
-        | 'top'
-        | 'top-right'
-        | 'right'
-        | 'bottom-right'
-        | 'bottom'
-        | 'bottom-left'
-        | 'left'
-        | 'center'
-        | Partial<{
-              top: number;
-              left: number;
-              width: number;
-              height: number;
-          }>;
+    | 'top-left'
+    | 'top'
+    | 'top-right'
+    | 'right'
+    | 'bottom-right'
+    | 'bottom'
+    | 'bottom-left'
+    | 'left'
+    | 'center'
+    | Partial<{
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+    }>;
     /**
      * The side props of the PopoverContent component.
      */
@@ -260,7 +253,7 @@ function useTour() {
 
 const getElement = async (
     elementSelector: string | Element | (() => Element),
-    maxSearchTimeout: number = DEFAULT_MAX_SEARCH_TIMEOUT
+    maxSearchTimeout: number = DEFAULT_MAX_SEARCH_TIMEOUT,
 ): Promise<Element | undefined> => {
     const getElementSync = (): Element | undefined => {
         if (typeof elementSelector === 'string') {
@@ -333,7 +326,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
             // Always call onOpenChange if provided
             onOpenChange?.(newValue);
         },
-        [isOpen, open, onOpenChange]
+        [isOpen, open, onOpenChange],
     );
 
     const config = useMemo<TourConfig>(
@@ -348,16 +341,15 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
             maxSearchTimeout: DEFAULT_MAX_SEARCH_TIMEOUT,
             ...initialConfig,
         }),
-        [initialConfig]
+        [initialConfig],
     );
 
     const popoverOpenChange = useCallback(
         (value: boolean) => {
-            if ((config.interactWithActiveElement || state?.activeStep.interactWithActiveElement) && !value)
-                return;
+            if ((config.interactWithActiveElement || state?.activeStep.interactWithActiveElement) && !value) return;
             setIsOpen(value);
         },
-        [setIsOpen, config.interactWithActiveElement, state?.activeStep.interactWithActiveElement]
+        [setIsOpen, config.interactWithActiveElement, state?.activeStep.interactWithActiveElement],
     );
 
     const close = useCallback(() => {
@@ -378,7 +370,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                 height: rect.height + padding * 2,
             };
         },
-        [config.stagePadding]
+        [config.stagePadding],
     );
 
     const scrollToElement = useCallback(
@@ -403,15 +395,10 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                             let lastScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
                             const checkScrollEnd = () => {
-                                const currentScrollTop =
-                                    window.pageYOffset || document.documentElement.scrollTop;
-                                const currentScrollLeft =
-                                    window.pageXOffset || document.documentElement.scrollLeft;
+                                const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                                const currentScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-                                if (
-                                    currentScrollTop === lastScrollTop &&
-                                    currentScrollLeft === lastScrollLeft
-                                ) {
+                                if (currentScrollTop === lastScrollTop && currentScrollLeft === lastScrollLeft) {
                                     clearTimeout(scrollTimeout);
                                     scrollResolve();
                                     return;
@@ -444,7 +431,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                 waitForScrollEnd().then(resolve);
             });
         },
-        [config.smoothScroll]
+        [config.smoothScroll],
     );
 
     const destroy = useCallback(() => {
@@ -524,7 +511,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
             scrollToElement,
             calculateStagePosition,
             close,
-        ]
+        ],
     );
 
     const drive = useCallback(
@@ -551,7 +538,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                 config.onHighlighted(newState.activeElement, newState.activeStep);
             }
         },
-        [config, calculateState]
+        [config, calculateState],
     );
 
     const moveNext = useCallback(async () => {
@@ -642,7 +629,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
 
             switch (event.key) {
                 case 'ArrowRight':
-                case ' ':
+                case ' ': {
                     event.preventDefault();
 
                     const step = state?.activeStep;
@@ -653,6 +640,7 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
 
                     await moveNext();
                     break;
+                }
                 case 'ArrowLeft':
                     event.preventDefault();
                     await movePrevious();
@@ -710,28 +698,28 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
             !state
                 ? null
                 : {
-                      close,
-                      config,
-                      state,
-                      moveNext,
-                      movePrevious,
-                      isFirstStep: () => state.activeIndex === 0,
-                      isLastStep: () => {
-                          const steps = config.steps || [];
-                          return state.activeIndex === steps.length - 1;
-                      },
-                      refresh: async () => {
-                          await drive(state.activeIndex);
-                      },
-                  },
-        [config, state, moveNext, movePrevious, close]
+                    close,
+                    config,
+                    state,
+                    moveNext,
+                    movePrevious,
+                    isFirstStep: () => state.activeIndex === 0,
+                    isLastStep: () => {
+                        const steps = config.steps || [];
+                        return state.activeIndex === steps.length - 1;
+                    },
+                    refresh: async () => {
+                        await drive(state.activeIndex);
+                    },
+                },
+        [config, state, moveNext, movePrevious, close],
     );
 
     return (
         <Popover open={isOpen} onOpenChange={popoverOpenChange}>
             {/* // <Popover open={isOpen} onOpenChange={popoverChangeSetter}> */}
-            {isOpen ? (
-                // <TourProvider
+            {isOpen
+                ? // <TourProvider
                 //     close={close}
                 //     // popoverOpenChange={popoverOpenChange}
                 //     // setPopoverChangeSetter={setPopoverChangeSetter}
@@ -744,13 +732,12 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                 //     {children}
                 // </TourProvider>
 
-                <>
-                    {state && contextValue && (
-                        <TourContext.Provider value={contextValue}>
-                            {(config.interactWithActiveElement ||
-                                state.activeStep.interactWithActiveElement) && (
-                                <style id="tour-driver-style">
-                                    {`
+                state &&
+                contextValue && (
+                    <TourContext.Provider value={contextValue}>
+                        {(config.interactWithActiveElement || state.activeStep.interactWithActiveElement) && (
+                            <style id="tour-driver-style">
+                                {`
                 * {
                     pointer-events: none !important;
                 }
@@ -758,32 +745,29 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                     pointer-events: auto !important;
                 }
             `}
-                                </style>
-                            )}
-                            <div id="salut-tout-le-monde"></div>
-                            {children}
-                            {state.stagePosition && (
-                                <PopoverAnchor asChild>
-                                    <div
-                                        id="tour-anchor"
-                                        aria-hidden="true"
-                                        className="pointer-events-none fixed"
-                                        style={{
-                                            left: `${state.stagePosition.x}px`,
-                                            top: `${state.stagePosition.y}px`,
-                                            width: `${state.stagePosition.width}px`,
-                                            height: `${state.stagePosition.height}px`,
-                                            zIndex: 998,
-                                        }}
-                                    />
-                                </PopoverAnchor>
-                            )}
-                        </TourContext.Provider>
-                    )}
-                </>
-            ) : (
-                children
-            )}
+                            </style>
+                        )}
+                        <div id="salut-tout-le-monde"></div>
+                        {children}
+                        {state.stagePosition && (
+                            <PopoverAnchor asChild>
+                                <div
+                                    id="tour-anchor"
+                                    aria-hidden="true"
+                                    className="pointer-events-none fixed"
+                                    style={{
+                                        left: `${state.stagePosition.x}px`,
+                                        top: `${state.stagePosition.y}px`,
+                                        width: `${state.stagePosition.width}px`,
+                                        height: `${state.stagePosition.height}px`,
+                                        zIndex: 998,
+                                    }}
+                                />
+                            </PopoverAnchor>
+                        )}
+                    </TourContext.Provider>
+                )
+                : children}
         </Popover>
     );
 }
@@ -791,14 +775,10 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
 const TourTrigger = PopoverTrigger;
 
 const TourPortal: React.FC<React.ComponentProps<typeof PopoverPortal>> = ({ children, ...props }) => {
-    return (
-        <PopoverPortal {...props}>
-            <>{children}</>
-        </PopoverPortal>
-    );
+    return <PopoverPortal {...props}>{children}</PopoverPortal>;
 };
 
-interface TourFrameProps extends Omit<React.ComponentProps<typeof motion.div>, 'id' | 'children'> {}
+interface TourFrameProps extends Omit<React.ComponentProps<typeof motion.div>, 'id' | 'children'> { }
 
 function TourFrame(props: TourFrameProps) {
     const { state, config } = useTour();
@@ -842,7 +822,6 @@ function TourFrame(props: TourFrameProps) {
                     {...props}
                     style={{
                         ...props.style,
-                        // @ts-ignore
                         borderRadius: config.stageRadius || 5,
                     }}
                 />
@@ -893,7 +872,7 @@ function TourOverlay({
             moveNext,
             state.activeStep.interactWithActiveElement,
             config.interactWithActiveElement,
-        ]
+        ],
     );
 
     const generateStageSvgPathString = useCallback(
@@ -925,7 +904,7 @@ function TourOverlay({
             return `M${windowX},0L0,0L0,${windowY}L${windowX},${windowY}L${windowX},0Z
           M${highlightBoxX},${highlightBoxY} h${highlightBoxWidth} a${normalizedRadius},${normalizedRadius} 0 0 1 ${normalizedRadius},${normalizedRadius} v${highlightBoxHeight} a${normalizedRadius},${normalizedRadius} 0 0 1 -${normalizedRadius},${normalizedRadius} h-${highlightBoxWidth} a${normalizedRadius},${normalizedRadius} 0 0 1 -${normalizedRadius},-${normalizedRadius} v-${highlightBoxHeight} a${normalizedRadius},${normalizedRadius} 0 0 1 ${normalizedRadius},-${normalizedRadius} z`;
         },
-        [config.stagePadding, config.stageRadius]
+        [config.stagePadding, config.stageRadius],
     );
 
     // Track window size for mask bounds
@@ -981,7 +960,7 @@ function TourOverlay({
                 onClick={handleOverlayClick}
                 className={cn(
                     'fixed inset-0 top-0 left-0 h-screen w-screen bg-black/50 mask-[url(#tour-overlay-mask)]',
-                    className
+                    className,
                 )}
                 style={{
                     zIndex: 1000,
@@ -1062,7 +1041,6 @@ const getDialogPositionStyles = (dialogPosition: TourStep['dialogPosition']): Re
                 left: '1rem',
                 transform: 'translateY(-50%)',
             };
-        case 'center':
         default:
             return {
                 position: 'fixed' as const,
@@ -1073,7 +1051,7 @@ const getDialogPositionStyles = (dialogPosition: TourStep['dialogPosition']): Re
     }
 };
 
-interface TourContentProps extends Omit<React.ComponentProps<typeof PopoverContent>, 'side' | 'align'> {}
+interface TourContentProps extends Omit<React.ComponentProps<typeof PopoverContent>, 'side' | 'align'> { }
 
 function TourContent({
     className: propClassName,
@@ -1088,7 +1066,7 @@ function TourContent({
 
     const className = cn(
         'bg-background text-popover-foreground max-w-sm rounded-lg border p-4 shadow-lg outline-hidden',
-        propClassName
+        propClassName,
     );
 
     return (
@@ -1131,7 +1109,7 @@ function TourContent({
                 className={cn(
                     className,
                     'animate-in fade-in-0 zoom-in-95',
-                    step.dialogDisplay && 'pointer-events-none hidden'
+                    step.dialogDisplay && 'pointer-events-none hidden',
                 )}
                 closeIcon={false}
                 side={step.side}
@@ -1223,9 +1201,7 @@ function TourProgress({
     const children =
         typeof progressChildren === 'function'
             ? progressChildren(current, total)
-            : progressChildren
-                  .replace('{{current}}', current.toString())
-                  .replace('{{total}}', total.toString());
+            : progressChildren.replace('{{current}}', current.toString()).replace('{{total}}', total.toString());
 
     return (
         <div className={cn('text-muted-foreground/80 mb-3 text-xs', className)} {...props}>
@@ -1278,8 +1254,7 @@ export interface TourPreviousProps {
 
 const TourPrevious = React.forwardRef<
     HTMLButtonElement,
-    TourPreviousProps &
-        Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
+    TourPreviousProps & Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
 >(({ className, children, variant, size, disabled, onClick, ...props }, ref) => {
     const { state, config, movePrevious, isFirstStep } = useTour();
 
@@ -1351,9 +1326,7 @@ const TourNext = React.forwardRef<
         const step = state.activeStep;
         const isInteractive = config.interactWithActiveElement || step?.interactWithActiveElement;
         return (
-            !config.allowClose ||
-            disabled ||
-            (isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick))
+            !config.allowClose || disabled || (isInteractive && (step?.nextOnClick || step?.nextHandledInElementClick))
         );
     }, [config.allowClose, config.interactWithActiveElement, disabled, state.activeStep]);
 

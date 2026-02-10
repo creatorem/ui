@@ -2,7 +2,7 @@ import { Button } from '@kit/ui/button';
 import { Icon } from '@kit/ui/icon';
 import { cn } from '@kit/utils';
 import React, { useCallback, useMemo } from 'react';
-import { useDropzone, type DropEvent, type DropzoneOptions, type FileRejection } from 'react-dropzone';
+import { type DropEvent, type DropzoneOptions, type FileRejection, useDropzone } from 'react-dropzone';
 
 export interface ImageDropzoneProps {
     title?: string;
@@ -47,7 +47,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps & Omit<DropzoneOptions, 
             disabled,
             ...dropzoneProps,
         }),
-        [accept, maxFiles, maxSize, minSize, onDrop, onError, disabled, dropzoneProps]
+        [accept, maxFiles, maxSize, minSize, onDrop, onError, disabled, dropzoneProps],
     );
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone(dropzoneOptions);
@@ -64,7 +64,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps & Omit<DropzoneOptions, 
                 '3xl': 'rounded-3xl',
                 full: 'rounded-full',
             })[borderRadius],
-        [borderRadius]
+        [borderRadius],
     );
 
     const renderContent = useCallback(() => {
@@ -101,7 +101,7 @@ export const ImageDropzone: React.FC<ImageDropzoneProps & Omit<DropzoneOptions, 
                 borderRadiusClass,
                 src ? 'p-0.5' : 'px-0 py-3',
                 isDragActive && 'border-primary',
-                className
+                className,
             )}
             {...getRootProps()}
         >

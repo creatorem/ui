@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 export function useFnDelay<T>(
     asyncFactory: (delay: (timeMs: number) => Promise<void>) => Promise<T>,
-    deps: React.DependencyList
+    deps: React.DependencyList,
 ) {
     const [value, setValue] = useState<T | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -84,6 +84,6 @@ export function useDelay<T>(value: T, delayMs: number) {
             }
             return value;
         },
-        [value, delayMs]
+        [value, delayMs],
     );
 }

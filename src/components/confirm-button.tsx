@@ -38,7 +38,7 @@ const TextConfirmationForm: React.FC<TextConfirmationFormProps> = ({ confirmatio
                     errorMap: () => ({ message: `Confirmation text must be "${confirmation}"` }),
                 }),
             }),
-        [confirmation]
+        [confirmation],
     );
 
     type FormValues = z.infer<typeof formSchema>;
@@ -168,10 +168,7 @@ export interface ConfirmButtonProps {
      * The labels for the buttons.
      */
     buttonLabels?: ConfirmationButtonLabels;
-    confirmButtonProps?: Omit<
-        React.ComponentPropsWithoutRef<typeof Button>,
-        'children' | 'aria-label' | 'content'
-    >;
+    confirmButtonProps?: Omit<React.ComponentPropsWithoutRef<typeof Button>, 'children' | 'aria-label' | 'content'>;
 }
 
 export const ConfirmButton = React.forwardRef<
@@ -195,21 +192,18 @@ export const ConfirmButton = React.forwardRef<
             confirmButtonProps,
             ...buttonProps
         },
-        ref
+        ref,
     ) => {
-        const templateData = useMemo(
-            () => (templatekey ? CONFIRMATION_TEMPLATES[templatekey] : null),
-            [templatekey]
-        );
+        const templateData = useMemo(() => (templatekey ? CONFIRMATION_TEMPLATES[templatekey] : null), [templatekey]);
         const header = useMemo(() => headerProp ?? templateData?.header, [headerProp, templateData]);
         const content = useMemo(() => contentProp ?? templateData?.content, [contentProp, templateData]);
         const buttonCancelLabel = useMemo(
             () => buttonLabelsProp.cancel ?? templateData?.buttonLabels.cancel ?? 'Cancel',
-            [buttonLabelsProp.cancel, templateData?.buttonLabels.cancel]
+            [buttonLabelsProp.cancel, templateData?.buttonLabels.cancel],
         );
         const buttonConfirmLabel = useMemo(
             () => buttonLabelsProp.confirm ?? templateData?.buttonLabels.confirm ?? 'Confirm',
-            [buttonLabelsProp.confirm, templateData?.buttonLabels.confirm]
+            [buttonLabelsProp.confirm, templateData?.buttonLabels.confirm],
         );
 
         const [open, setOpen] = useState(false);
@@ -221,7 +215,7 @@ export const ConfirmButton = React.forwardRef<
                 e.stopPropagation();
                 setOpen(true);
             },
-            [setOpen]
+            [setOpen],
         );
 
         const handleCancellation = useCallback(
@@ -230,7 +224,7 @@ export const ConfirmButton = React.forwardRef<
                 e.stopPropagation();
                 setOpen(false);
             },
-            [setOpen]
+            [setOpen],
         );
 
         const handleDeletion = useCallback(
@@ -242,7 +236,7 @@ export const ConfirmButton = React.forwardRef<
                     setOpen(false);
                 }
             },
-            [isValidConfirmation, onConfirmation]
+            [isValidConfirmation, onConfirmation],
         );
 
         const preventPropagation = useCallback((e: React.MouseEvent) => {
@@ -340,6 +334,6 @@ export const ConfirmButton = React.forwardRef<
                 </AlertDialogPortal>
             </AlertDialog>
         );
-    }
+    },
 );
 ConfirmButton.displayName = 'ConfirmButton';

@@ -49,7 +49,7 @@ function ProgressionRoot({ children }: { children: React.ReactNode }) {
                 console.warn('scrollToProgress called but no content measured yet');
             }
         },
-        [scrollToProgressFn]
+        [scrollToProgressFn],
     );
 
     const updateProgress = React.useCallback((newProgress: number) => {
@@ -104,12 +104,11 @@ function ProgressionContent({ children, asChild = false, className, style }: Pro
         // Calculate current scroll position relative to content
         const currentPosition = Math.max(
             0,
-            Math.min(scrollTop - startPosition + (progressRef.current / 100) * windowHeight)
+            Math.min(scrollTop - startPosition + (progressRef.current / 100) * windowHeight),
         );
 
         // Calculate progress as percentage
-        const newProgress =
-            totalHeight > 0 ? Math.min(100, Math.max(0, (currentPosition / totalHeight) * 100)) : 0;
+        const newProgress = totalHeight > 0 ? Math.min(100, Math.max(0, (currentPosition / totalHeight) * 100)) : 0;
 
         updateProgress(newProgress);
 
@@ -282,12 +281,7 @@ export interface ProgressionBarProps {
 /**
  * Component that show progression in the bar
  */
-function ProgressionBar({
-    thickness = 2,
-    className,
-    direction = 'horizontal',
-    barClassName,
-}: ProgressionBarProps) {
+function ProgressionBar({ thickness = 2, className, direction = 'horizontal', barClassName }: ProgressionBarProps) {
     const { progress, isReady } = useProgression();
 
     if (!isReady) return null;
@@ -297,7 +291,7 @@ function ProgressionBar({
             className={cn(
                 direction === 'horizontal' ? 'w-full' : 'h-full',
                 'bg-muted-foreground/20 overflow-hidden rounded-full',
-                className
+                className,
             )}
             style={direction === 'horizontal' ? { height: thickness } : { width: thickness }}
         >
@@ -305,7 +299,7 @@ function ProgressionBar({
                 className={cn(
                     direction === 'horizontal' ? 'h-full' : 'w-full',
                     'bg-primary rounded-full transition-all duration-300 ease-out',
-                    barClassName
+                    barClassName,
                 )}
                 style={direction === 'horizontal' ? { width: `${progress}%` } : { height: `${progress}%` }}
             />
@@ -313,10 +307,4 @@ function ProgressionBar({
     );
 }
 
-export {
-    ProgressionRoot as Progression,
-    ProgressionBar,
-    ProgressionCircle,
-    ProgressionContent,
-    useProgression,
-};
+export { ProgressionRoot as Progression, ProgressionBar, ProgressionCircle, ProgressionContent, useProgression };

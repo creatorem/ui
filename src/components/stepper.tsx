@@ -6,14 +6,14 @@ import { cn } from '@kit/utils';
 import {
     StepperActiveStep,
     StepperFormField,
+    type StepperProps,
     StepperStep,
     StepperStepLength,
+    type StepperStepProps,
+    Stepper as UtilsStepper,
     useStepper,
     useStepperContentBase,
     useStepperForm,
-    Stepper as UtilsStepper,
-    type StepperProps,
-    type StepperStepProps,
 } from '@kit/utils/stepper';
 import { Slot } from '@radix-ui/react-slot';
 import { AnimatePresence, HTMLMotionProps, motion } from 'motion/react';
@@ -35,10 +35,7 @@ function StepperContent({ children, ...props }: React.ComponentPropsWithoutRef<'
     );
 }
 
-function StepperMotionContent({
-    children,
-    ...props
-}: { children: React.ReactNode } & HTMLMotionProps<'div'>) {
+function StepperMotionContent({ children, ...props }: { children: React.ReactNode } & HTMLMotionProps<'div'>) {
     const { activeStep } = useStepper();
     const { selectedChild } = useStepperContentBase(children);
     const { containerRef } = useStepperAutoFocusNext(activeStep, selectedChild);
@@ -71,7 +68,7 @@ function useStepperAutoFocusNext(activeStep: number, dependency?: unknown) {
                 const root = containerRef.current;
                 if (!root) return;
                 const el = root.querySelector<HTMLElement>(
-                    'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
+                    'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])',
                 );
                 el?.focus?.();
             }, 0);
@@ -94,8 +91,7 @@ export interface StepperPreviousProps {
 
 const StepperPrevious = React.forwardRef<
     HTMLButtonElement,
-    StepperPreviousProps &
-        Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
+    StepperPreviousProps & Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
 >(({ className, children, variant, disabled, onClick, ...props }, ref) => {
     const { activeStep, movePrevious, isFirstStep } = useStepper();
 
@@ -108,7 +104,7 @@ const StepperPrevious = React.forwardRef<
             onClick?.(e, activeStep);
             movePrevious();
         },
-        [activeStep, movePrevious, onClick]
+        [activeStep, movePrevious, onClick],
     );
 
     return (
@@ -144,8 +140,7 @@ export interface StepperNextProps {
 
 const StepperNext = React.forwardRef<
     HTMLButtonElement,
-    StepperNextProps &
-        Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
+    StepperNextProps & Omit<React.ComponentPropsWithoutRef<typeof Button>, 'aria-label' | 'onClick' | 'asChild'>
 >(
     (
         {
@@ -160,7 +155,7 @@ const StepperNext = React.forwardRef<
             onLastClick,
             ...props
         },
-        ref
+        ref,
     ) => {
         const { activeStep, moveNext, isLastStep } = useStepper();
         const { isDirtyGateOpen, validateStep, blockedSteps, reactForm, onSubmit } = useStepperForm();
@@ -209,7 +204,7 @@ const StepperNext = React.forwardRef<
                 onLastClick,
                 isLast,
                 onSubmit,
-            ]
+            ],
         );
 
         if (isLast) {
@@ -227,9 +222,7 @@ const StepperNext = React.forwardRef<
                         disabled={
                             typeof disabled === 'boolean'
                                 ? disabled
-                                : reactForm.formState.isSubmitSuccessful ||
-                                  blockedSteps[activeStep] ||
-                                  !isDirtyGateOpen
+                                : reactForm.formState.isSubmitSuccessful || blockedSteps[activeStep] || !isDirtyGateOpen
                         }
                         {...props}
                     >
@@ -251,20 +244,15 @@ const StepperNext = React.forwardRef<
                 ref={ref}
                 aria-label={isLast ? 'Done' : 'Next'}
                 onClick={handleNextClick}
-                className={cn(
-                    isLast && !onClick && !reactForm ? 'pointer-events-none opacity-0' : '',
-                    className
-                )}
+                className={cn(isLast && !onClick && !reactForm ? 'pointer-events-none opacity-0' : '', className)}
                 variant={variant ?? 'default'}
-                disabled={
-                    typeof disabled === 'boolean' ? disabled : blockedSteps[activeStep] || !isDirtyGateOpen
-                }
+                disabled={typeof disabled === 'boolean' ? disabled : blockedSteps[activeStep] || !isDirtyGateOpen}
                 {...props}
             >
                 {isLast ? lastChildren || 'Done' : children || 'Next →'}
             </Button>
         );
-    }
+    },
 );
 StepperNext.displayName = 'StepperNext';
 
@@ -292,7 +280,7 @@ function StepperTrigger({
             className={cn(
                 'group/stepper-trigger cursor-pointer',
                 disableForwardNav && activeStep < step && 'pointer-events-none opacity-50',
-                className
+                className,
             )}
             data-slot="stepper-trigger"
             data-state={activeStep === step ? 'active' : activeStep > step ? 'complete' : 'upcoming'}

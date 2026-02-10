@@ -46,7 +46,7 @@ function deepMerge<T>(obj1: T, obj2: T = {} as T): T {
         if (obj2[key] && typeof obj2[key] === 'object' && !Array.isArray(obj2[key])) {
             result[key] = deepMerge(
                 (result[key] as T[Extract<keyof T, string>]) || ({} as T[Extract<keyof T, string>]),
-                obj2[key] as T[Extract<keyof T, string>]
+                obj2[key] as T[Extract<keyof T, string>],
             );
         } else {
             result[key] = obj2[key];
@@ -144,7 +144,7 @@ const Dialog: React.FC<DialogProps & React.PropsWithChildren> = ({
             // Always call onOpenChange if provided
             onOpenChange?.(newValue);
         },
-        [isOpen, open, onOpenChange]
+        [isOpen, open, onOpenChange],
     );
 
     // used to render the data-open attributes before the animation is applied
@@ -157,7 +157,7 @@ const Dialog: React.FC<DialogProps & React.PropsWithChildren> = ({
             if (!isOpen) await delay(transition.layout.duration * 1000);
             return isOpen;
         },
-        [isOpen, transition.layout.duration]
+        [isOpen, transition.layout.duration],
     );
 
     return (
@@ -184,14 +184,14 @@ const DialogTrigger = React.forwardRef<HTMLDivElement, DialogTriggerProps>(
 
         return (
             <motion.div
-                layoutId={'dialog-content-' + id}
+                layoutId={`dialog-content-${id}`}
                 transition={transitionDialog}
                 data-slot="dialog-trigger-anchor"
                 data-open={dataOpen}
                 className={cn(
                     'group/dialog-trigger cursor-pointer',
                     className,
-                    animatedOpen || dataOpen ? 'pointer-events-none' : undefined
+                    animatedOpen || dataOpen ? 'pointer-events-none' : undefined,
                 )}
                 style={{
                     ...style,
@@ -206,7 +206,7 @@ const DialogTrigger = React.forwardRef<HTMLDivElement, DialogTriggerProps>(
                 {children}
             </motion.div>
         );
-    }
+    },
 );
 
 DialogTrigger.displayName = 'DialogTrigger';
@@ -231,14 +231,11 @@ const DialogMotionImageWrapper = React.forwardRef<
     return (
         <DialogImageContext.Provider value={layoutIdProp}>
             <motion.div
-                layoutId={'dialog-image-wrapper-' + id + '-' + layoutIdProp}
+                layoutId={`dialog-image-wrapper-${id}-${layoutIdProp}`}
                 transition={{ ...transitionDialog, ...transition }}
                 data-slot={'dialog-image-wrapper'}
                 data-open={dataOpen}
-                className={cn(
-                    'relative flex h-72 w-full flex-col justify-stretch overflow-hidden',
-                    className
-                )}
+                className={cn('relative flex h-72 w-full flex-col justify-stretch overflow-hidden', className)}
                 whileHover={animatedOpen || dataOpen ? undefined : whileHover}
                 {...props}
                 ref={ref}
@@ -258,7 +255,7 @@ const DialogMotionImage = React.forwardRef<HTMLImageElement, Omit<HTMLMotionProp
 
         return (
             <motion.img
-                layoutId={'dialog-image-' + id + '-' + wrapperLayoutId}
+                layoutId={`dialog-image-${id}-${wrapperLayoutId}`}
                 transition={{ ...transitionDialog, ...transition }}
                 data-slot={'dialog-image'}
                 data-open={dataOpen}
@@ -270,7 +267,7 @@ const DialogMotionImage = React.forwardRef<HTMLImageElement, Omit<HTMLMotionProp
                 ref={ref}
             />
         );
-    }
+    },
 );
 
 DialogMotionImage.displayName = 'DialogMotionImage';
@@ -285,13 +282,7 @@ interface DialogContentWrapperProps {
 
 const DialogContentWrapper: React.FC<
     DialogContentWrapperProps & React.HTMLAttributes<HTMLDivElement> & React.PropsWithChildren
-> = ({
-    clickBehaviour = 'close',
-    children,
-    className: wrapperClassName,
-    style: wrapperStyle,
-    ...wrapper
-}) => {
+> = ({ clickBehaviour = 'close', children, className: wrapperClassName, style: wrapperStyle, ...wrapper }) => {
     const { transition: transitionDialog, dataOpen, presenceOpen } = useDialog();
 
     return (
@@ -308,7 +299,7 @@ const DialogContentWrapper: React.FC<
                     data-open={dataOpen}
                     className={cn(
                         'group/dialog pointer-events-none fixed inset-0 flex h-screen w-screen overflow-auto overscroll-auto p-8',
-                        wrapperClassName
+                        wrapperClassName,
                     )}
                     {...wrapper}
                 >
@@ -340,14 +331,14 @@ const DialogContentLayoutId: React.FC<
 
     return (
         <motion.div
-            layoutId={'dialog-content-' + id}
+            layoutId={`dialog-content-${id}`}
             transition={{ ...transitionDialog, ...transition }}
             data-slot="dialog-content"
             data-open={dataOpen}
             className={cn(
                 'pointer-events-auto m-auto max-w-[96vw] overflow-hidden rounded-2xl border shadow-2xl',
                 clickBehaviour === 'close' ? 'cursor-pointer' : 'cursor-default',
-                className
+                className,
             )}
             onClick={handleClick}
             {...props}
@@ -387,7 +378,7 @@ const DialogMotionDiv = React.forwardRef<HTMLDivElement, HTMLMotionProps<'div'>>
 
         return (
             <motion.div
-                layoutId={layoutIdProp ? 'motion-div-' + id + '-' + layoutIdProp : undefined}
+                layoutId={layoutIdProp ? `motion-div-${id}-${layoutIdProp}` : undefined}
                 transition={deepMerge(transitionDialog, transition)}
                 data-slot={'motion-div'}
                 data-open={dataOpen}
@@ -398,7 +389,7 @@ const DialogMotionDiv = React.forwardRef<HTMLDivElement, HTMLMotionProps<'div'>>
                 {children}
             </motion.div>
         );
-    }
+    },
 );
 
 DialogMotionDiv.displayName = 'DialogMotionDiv';
@@ -425,54 +416,49 @@ export interface DialogAnimatePresenceDivProps {
 const DialogAnimatePresenceDiv = React.forwardRef<
     HTMLDivElement,
     DialogAnimatePresenceDivProps & HTMLMotionProps<'div'>
->(
-    (
-        { transition: transitionProp, children, onceOpen, delayFactor = 1, durationFactor = 0.5, ...props },
-        ref
-    ) => {
-        const { transition: transitionDialog, dataOpen } = useDialog();
+>(({ transition: transitionProp, children, onceOpen, delayFactor = 1, durationFactor = 0.5, ...props }, ref) => {
+    const { transition: transitionDialog, dataOpen } = useDialog();
 
-        const innerOpen = useFnDelay(
-            async (delay) => {
-                if (dataOpen) {
-                    const delayTime = onceOpen
-                        ? (transitionProp?.duration ?? transitionDialog.duration) * 1000 * delayFactor
-                        : 0;
-                    await delay(delayTime);
-                }
-                return dataOpen;
-            },
-            [dataOpen, transitionProp?.duration, transitionDialog.duration, delayFactor, onceOpen]
-        );
+    const innerOpen = useFnDelay(
+        async (delay) => {
+            if (dataOpen) {
+                const delayTime = onceOpen
+                    ? (transitionProp?.duration ?? transitionDialog.duration) * 1000 * delayFactor
+                    : 0;
+                await delay(delayTime);
+            }
+            return dataOpen;
+        },
+        [dataOpen, transitionProp?.duration, transitionDialog.duration, delayFactor, onceOpen],
+    );
 
-        return (
-            <AnimatePresence>
-                {innerOpen && (
-                    <DialogMotionDiv
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{
-                            ...transitionProp,
-                            ...(durationFactor
-                                ? {
-                                      duration: transitionDialog.duration * durationFactor,
-                                      layout: {
-                                          duration: transitionDialog.layout.duration * durationFactor,
-                                      },
-                                  }
-                                : {}),
-                        }}
-                        ref={ref}
-                        {...props}
-                    >
-                        {children}
-                    </DialogMotionDiv>
-                )}
-            </AnimatePresence>
-        );
-    }
-);
+    return (
+        <AnimatePresence>
+            {innerOpen && (
+                <DialogMotionDiv
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                        ...transitionProp,
+                        ...(durationFactor
+                            ? {
+                                  duration: transitionDialog.duration * durationFactor,
+                                  layout: {
+                                      duration: transitionDialog.layout.duration * durationFactor,
+                                  },
+                              }
+                            : {}),
+                    }}
+                    ref={ref}
+                    {...props}
+                >
+                    {children}
+                </DialogMotionDiv>
+            )}
+        </AnimatePresence>
+    );
+});
 
 DialogAnimatePresenceDiv.displayName = 'DialogAnimatePresenceDiv';
 
@@ -503,7 +489,7 @@ const DialogOverlay = React.forwardRef<HTMLDivElement, Omit<HTMLMotionProps<'div
                 )}
             </AnimatePresence>
         );
-    }
+    },
 );
 
 const DialogPortal = Portal;
@@ -518,13 +504,13 @@ const DialogClose = React.forwardRef<HTMLButtonElement, HTMLMotionProps<'button'
                 onClick={() => setIsOpen(false)}
                 className={cn(
                     'bg-muted/50 hover:bg-muted absolute top-4 right-4 z-50 flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors',
-                    className
+                    className,
                 )}
             >
                 {children ?? <Icon name="X" className="text-accent-foreground size-7" />}
             </motion.button>
         );
-    }
+    },
 );
 DialogClose.displayName = 'DialogClose';
 

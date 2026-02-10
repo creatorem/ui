@@ -95,7 +95,7 @@ export function RatioPreserver({ width, height, children, className, asChild = f
             contentWidth: width,
             contentHeight: height,
         }),
-        [scale, width, height]
+        [scale, width, height],
     );
 
     return (
@@ -144,7 +144,7 @@ export const RatioPreserverContent = React.forwardRef<HTMLDivElement, RatioPrese
                 {children}
             </div>
         );
-    }
+    },
 );
 
 RatioPreserverContent.displayName = 'RatioPreserverContent';

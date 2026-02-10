@@ -108,7 +108,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
     const glassThickness = customGlassThickness ?? sizeConfig.glassThickness;
     const bezelWidth = customBezelWidth ?? sizeConfig.bezelWidth;
     const rawId = useId();
-    const filterId = 'switch-thumb_' + rawId;
+    const filterId = `switch-thumb_${rawId}`;
     const thumbRadius = thumbHeight / 2;
     const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -145,7 +145,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
             }
             onCheckedChange?.(newChecked);
         },
-        [disabled, isControlled, onCheckedChange]
+        [disabled, isControlled, onCheckedChange],
     );
 
     const handlePointerDown = useCallback(
@@ -157,7 +157,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
             pointerDown.set(1);
             initialPointerX.set(clientX);
         },
-        [disabled, pointerDown, initialPointerX]
+        [disabled, pointerDown, initialPointerX],
     );
 
     const handleMouseMove = useCallback(
@@ -173,7 +173,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
             const dampedOverflow = (overflowSign * overflow) / 22;
             xDragRatio.set(Math.min(1, Math.max(0, ratio)) + dampedOverflow);
         },
-        [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio]
+        [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio],
     );
 
     const handleTouchMove = useCallback(
@@ -190,7 +190,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
             const dampedOverflow = (overflowSign * overflow) / 22;
             xDragRatio.set(Math.min(1, Math.max(0, ratio)) + dampedOverflow);
         },
-        [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio]
+        [disabled, pointerDown, checkedMotion, initialPointerX, TRAVEL, xDragRatio],
     );
 
     const handleClick = useCallback(
@@ -205,7 +205,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
                 handleToggle(shouldBeChecked);
             }
         },
-        [disabled, initialPointerX, checkedMotion, handleToggle]
+        [disabled, initialPointerX, checkedMotion, handleToggle],
     );
 
     const handleGlobalPointerUp = useCallback(
@@ -221,7 +221,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
                 handleToggle(shouldBeChecked);
             }
         },
-        [pointerDown, initialPointerX, xDragRatio, handleToggle]
+        [pointerDown, initialPointerX, xDragRatio, handleToggle],
     );
 
     // Global pointer up listener
@@ -248,15 +248,15 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
                 return c ? 1 : 0;
             }
         }),
-        { damping: 80, stiffness: 1000 }
+        { damping: 80, stiffness: 1000 },
     );
     const backgroundOpacity = useSpring(
         useTransform(active, (v) => 1 - 0.9 * v),
-        { damping: 80, stiffness: 2000 }
+        { damping: 80, stiffness: 2000 },
     );
     const thumbScale = useSpring(
         useTransform(active, (v) => THUMB_REST_SCALE + (THUMB_ACTIVE_SCALE - THUMB_REST_SCALE) * v),
-        { damping: 80, stiffness: 2000 }
+        { damping: 80, stiffness: 2000 },
     );
     const scaleRatio = useSpring(useTransform(() => (0.4 + 0.5 * active.get()) * refractionBase.get()));
     const considerChecked = useTransform(() => {
@@ -267,7 +267,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
 
     const backgroundColor = useTransform(
         useSpring(considerChecked, { damping: 80, stiffness: 1000 }),
-        mix('#94949F77', '#3BBF4EEE')
+        mix('#94949F77', '#3BBF4EEE'),
     );
 
     return (
@@ -326,10 +326,7 @@ export const LiquidSwitch: FC<LiquidSwitchProps> = ({
                         backdropFilter: `url(#${filterId})`,
                         scale: thumbScale,
                         cursor: 'pointer',
-                        backgroundColor: useTransform(
-                            backgroundOpacity,
-                            (op) => `rgba(255, 255, 255, ${op})`
-                        ),
+                        backgroundColor: useTransform(backgroundOpacity, (op) => `rgba(255, 255, 255, ${op})`),
                         boxShadow: useTransform(() => {
                             const isPressed = pointerDown.get() > 0.5;
                             return (

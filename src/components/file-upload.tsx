@@ -77,25 +77,22 @@ export const FileInput: React.FC<FileInputProps> = ({ idName, onFileChange, form
 
             if (!formats.includes(file.type)) {
                 toast.error('File type is not supported', {
-                    description: truncate(
-                        `File type is not supported, supported formats are ${formats.join(', ')}`,
-                        {
-                            length: 70,
-                            separator: ' ',
-                        }
-                    ),
+                    description: truncate(`File type is not supported, supported formats are ${formats.join(', ')}`, {
+                        length: 70,
+                        separator: ' ',
+                    }),
                 });
                 return;
             }
 
             onFileChange(file);
         },
-        [formats, onFileChange]
+        [formats, onFileChange],
     );
 
     return (
         <label
-            htmlFor={'file-' + idName}
+            htmlFor={`file-${idName}`}
             className="bg-accent/10 hover:bg-accent/40 flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed"
         >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -109,7 +106,7 @@ export const FileInput: React.FC<FileInputProps> = ({ idName, onFileChange, form
                 <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or GIF</p>
             </div>
             <input
-                id={'file-' + idName}
+                id={`file-${idName}`}
                 type="file"
                 className="hidden"
                 onChange={handleChange}

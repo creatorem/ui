@@ -37,7 +37,7 @@ function Skeleton({
                 noShimmer
                     ? 'animate-pulse'
                     : 'animate-shimmer shimmer-with-pulse [--shimmer-color:color-mix(in_oklab,var(--color-opposite)_8%,transparent_100%)] dark:[--shimmer-color:color-mix(in_oklab,var(--color-opposite)_3%,transparent_100%)]',
-                className
+                className,
             )}
             aria-label="Loading"
             style={styleProps}
@@ -49,7 +49,7 @@ function Skeleton({
         <div
             className={cn(
                 'animate-shimmer rounded-[9px] p-px [--shimmer-color:color-mix(in_oklab,var(--color-opposite)_40%,transparent_100%)]',
-                shimmerBorderClassName
+                shimmerBorderClassName,
             )}
             style={{ animationDelay }}
         >
