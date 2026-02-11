@@ -43,21 +43,21 @@ export interface TourStep {
      * @default 'center'
      */
     dialogPosition?:
-    | 'top-left'
-    | 'top'
-    | 'top-right'
-    | 'right'
-    | 'bottom-right'
-    | 'bottom'
-    | 'bottom-left'
-    | 'left'
-    | 'center'
-    | Partial<{
-        top: number;
-        left: number;
-        width: number;
-        height: number;
-    }>;
+        | 'top-left'
+        | 'top'
+        | 'top-right'
+        | 'right'
+        | 'bottom-right'
+        | 'bottom'
+        | 'bottom-left'
+        | 'left'
+        | 'center'
+        | Partial<{
+              top: number;
+              left: number;
+              width: number;
+              height: number;
+          }>;
     /**
      * The side props of the PopoverContent component.
      */
@@ -698,20 +698,20 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
             !state
                 ? null
                 : {
-                    close,
-                    config,
-                    state,
-                    moveNext,
-                    movePrevious,
-                    isFirstStep: () => state.activeIndex === 0,
-                    isLastStep: () => {
-                        const steps = config.steps || [];
-                        return state.activeIndex === steps.length - 1;
-                    },
-                    refresh: async () => {
-                        await drive(state.activeIndex);
-                    },
-                },
+                      close,
+                      config,
+                      state,
+                      moveNext,
+                      movePrevious,
+                      isFirstStep: () => state.activeIndex === 0,
+                      isLastStep: () => {
+                          const steps = config.steps || [];
+                          return state.activeIndex === steps.length - 1;
+                      },
+                      refresh: async () => {
+                          await drive(state.activeIndex);
+                      },
+                  },
         [config, state, moveNext, movePrevious, close],
     );
 
@@ -720,24 +720,24 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
             {/* // <Popover open={isOpen} onOpenChange={popoverChangeSetter}> */}
             {isOpen
                 ? // <TourProvider
-                //     close={close}
-                //     // popoverOpenChange={popoverOpenChange}
-                //     // setPopoverChangeSetter={setPopoverChangeSetter}
-                //     config={{
-                //         interactWithActiveElement,
-                //         ...config,
-                //     }}
-                //     {...props}
-                // >
-                //     {children}
-                // </TourProvider>
+                  //     close={close}
+                  //     // popoverOpenChange={popoverOpenChange}
+                  //     // setPopoverChangeSetter={setPopoverChangeSetter}
+                  //     config={{
+                  //         interactWithActiveElement,
+                  //         ...config,
+                  //     }}
+                  //     {...props}
+                  // >
+                  //     {children}
+                  // </TourProvider>
 
-                state &&
-                contextValue && (
-                    <TourContext.Provider value={contextValue}>
-                        {(config.interactWithActiveElement || state.activeStep.interactWithActiveElement) && (
-                            <style id="tour-driver-style">
-                                {`
+                  state &&
+                  contextValue && (
+                      <TourContext.Provider value={contextValue}>
+                          {(config.interactWithActiveElement || state.activeStep.interactWithActiveElement) && (
+                              <style id="tour-driver-style">
+                                  {`
                 * {
                     pointer-events: none !important;
                 }
@@ -745,28 +745,28 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
                     pointer-events: auto !important;
                 }
             `}
-                            </style>
-                        )}
-                        <div id="salut-tout-le-monde"></div>
-                        {children}
-                        {state.stagePosition && (
-                            <PopoverAnchor asChild>
-                                <div
-                                    id="tour-anchor"
-                                    aria-hidden="true"
-                                    className="pointer-events-none fixed"
-                                    style={{
-                                        left: `${state.stagePosition.x}px`,
-                                        top: `${state.stagePosition.y}px`,
-                                        width: `${state.stagePosition.width}px`,
-                                        height: `${state.stagePosition.height}px`,
-                                        zIndex: 998,
-                                    }}
-                                />
-                            </PopoverAnchor>
-                        )}
-                    </TourContext.Provider>
-                )
+                              </style>
+                          )}
+                          <div id="salut-tout-le-monde"></div>
+                          {children}
+                          {state.stagePosition && (
+                              <PopoverAnchor asChild>
+                                  <div
+                                      id="tour-anchor"
+                                      aria-hidden="true"
+                                      className="pointer-events-none fixed"
+                                      style={{
+                                          left: `${state.stagePosition.x}px`,
+                                          top: `${state.stagePosition.y}px`,
+                                          width: `${state.stagePosition.width}px`,
+                                          height: `${state.stagePosition.height}px`,
+                                          zIndex: 998,
+                                      }}
+                                  />
+                              </PopoverAnchor>
+                          )}
+                      </TourContext.Provider>
+                  )
                 : children}
         </Popover>
     );
@@ -778,7 +778,7 @@ const TourPortal: React.FC<React.ComponentProps<typeof PopoverPortal>> = ({ chil
     return <PopoverPortal {...props}>{children}</PopoverPortal>;
 };
 
-interface TourFrameProps extends Omit<React.ComponentProps<typeof motion.div>, 'id' | 'children'> { }
+interface TourFrameProps extends Omit<React.ComponentProps<typeof motion.div>, 'id' | 'children'> {}
 
 function TourFrame(props: TourFrameProps) {
     const { state, config } = useTour();
@@ -1051,7 +1051,7 @@ const getDialogPositionStyles = (dialogPosition: TourStep['dialogPosition']): Re
     }
 };
 
-interface TourContentProps extends Omit<React.ComponentProps<typeof PopoverContent>, 'side' | 'align'> { }
+interface TourContentProps extends Omit<React.ComponentProps<typeof PopoverContent>, 'side' | 'align'> {}
 
 function TourContent({
     className: propClassName,
