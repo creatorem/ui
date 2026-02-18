@@ -775,7 +775,11 @@ function TourRoot({ children, defaultOpen, open, onOpenChange, config: initialCo
 const TourTrigger = PopoverTrigger;
 
 const TourPortal: React.FC<React.ComponentProps<typeof PopoverPortal>> = ({ children, ...props }) => {
-    return <PopoverPortal {...props}>{children}</PopoverPortal>;
+    return <PopoverPortal {...props}>
+        <>
+        {children}
+        </>
+        </PopoverPortal>;
 };
 
 interface TourFrameProps extends Omit<React.ComponentProps<typeof motion.div>, 'id' | 'children'> {}
