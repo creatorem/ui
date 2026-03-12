@@ -545,6 +545,8 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
         },
     });
 
+    const hasSelectedMedia = multiple ? selection.length > 0 : Boolean(focusedMedia);
+
     return (
         <DialogContent {...props} className={cn('w-[1200px] max-w-[90%] gap-0 border p-0 sm:max-w-[90%]', className)}>
             <VisuallyHidden>
@@ -584,9 +586,9 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                         {medias.map((media, index) => (
                                             <div
                                                 key={index}
-                                                className={
-                                                    'bg-foreground relative flex h-40 cursor-pointer items-center justify-center rounded-md border p-px' +
-                                                    (focusedMedia?.id === media.id ? ' outline-primary outline-2' : '')
+                                                className={cn(
+                                                    'bg-foreground relative flex h-40 cursor-pointer items-center justify-center rounded-md border',
+                                                    (focusedMedia?.id === media.id ? ' outline-primary outline-2' : ''))
                                                 }
                                                 onClick={createSelector(media)}
                                             >
@@ -664,11 +666,11 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                     </TabsContent>
                 </div>
                 <div className="flex w-full justify-end gap-x-4 p-6 py-4">
-                    {selection.length === 0 || !focusedMedia ? (
+                    {!hasSelectedMedia ? (
                         <Button
                             autoFocus
                             aria-label="Close"
-                            variant="default"
+                            variant="outline"
                             size={'sm'}
                             onClick={() => {
                                 setIsOpen(false);
