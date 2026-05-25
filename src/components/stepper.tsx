@@ -159,8 +159,16 @@ const StepperNext = React.forwardRef<
     ) => {
         const { activeStep, moveNext, isLastStep } = useStepper();
         const { isDirtyGateOpen, validateStep, blockedSteps, reactForm, onSubmit } = useStepperForm();
+        const submitGuardRef = React.useRef(false);
+        const isFormSubmitting = reactForm?.formState.isSubmitting ?? false;
 
         const isLast = isLastStep();
+
+        useEffect(() => {
+            if (!isFormSubmitting) {
+                submitGuardRef.current = false;
+            }
+        }, [isFormSubmitting]);
 
         const handleNextClick = useCallback(
             async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -168,6 +176,12 @@ const StepperNext = React.forwardRef<
                 if (!isLast || !reactForm || onSubmit) {
                     e.preventDefault();
                     e.stopPropagation();
+                }
+
+                if (isLast && (isFormSubmitting || submitGuardRef.current)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
                 }
 
                 if (canGoNext && !(await canGoNext(activeStep))) {
@@ -186,8 +200,14 @@ const StepperNext = React.forwardRef<
                 onClick?.(e, activeStep);
 
                 if (isLast) {
+                    submitGuardRef.current = true;
                     onLastClick?.();
                     onSubmit?.();
+                    setTimeout(() => {
+                        if (!reactForm?.formState.isSubmitting) {
+                            submitGuardRef.current = false;
+                        }
+                    }, 0);
                     return;
                 }
 
@@ -202,8 +222,8 @@ const StepperNext = React.forwardRef<
                 validateStep,
                 canGoNext,
                 onLastClick,
-                isLast,
                 onSubmit,
+                isFormSubmitting,
             ],
         );
 
@@ -219,10 +239,14 @@ const StepperNext = React.forwardRef<
                         onClick={handleNextClick}
                         className={cn(className)}
                         variant={variant ?? 'default'}
+                        loading={isFormSubmitting}
                         disabled={
                             typeof disabled === 'boolean'
                                 ? disabled
-                                : reactForm.formState.isSubmitSuccessful || blockedSteps[activeStep] || !isDirtyGateOpen
+                                : isFormSubmitting ||
+                                  reactForm.formState.isSubmitSuccessful ||
+                                  blockedSteps[activeStep] ||
+                                  !isDirtyGateOpen
                         }
                         {...props}
                     >
