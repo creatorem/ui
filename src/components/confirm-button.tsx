@@ -89,9 +89,9 @@ export type ConfirmationHeader =
     | React.ReactNode
     | string
     | {
-          title: string | React.ReactNode;
-          description?: string | React.ReactNode;
-      };
+        title: string | React.ReactNode;
+        description?: string | React.ReactNode;
+    };
 
 export interface ConfirmationButtonLabels {
     /**
