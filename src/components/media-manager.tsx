@@ -269,7 +269,7 @@ function EditMediaForm({ focusedMedia, onMediaDeleted }: EditMediaFormProps) {
         <div className="flex w-[300px] border-l">
             <ScrollArea type="always" className="group h-full w-full overflow-visible">
                 <div className="flex w-full flex-col gap-y-2 p-6">
-                    <div className="flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-md border bg-gray-50">
+                    <div className="bg-muted/50 flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-md border">
                         <Image
                             src={getUrl(focusedMedia, path)}
                             alt={formData.alternativeText || focusedMedia.name}
@@ -587,7 +587,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                             <div
                                                 key={index}
                                                 className={cn(
-                                                    'bg-foreground relative flex h-40 cursor-pointer items-center justify-center rounded-md border',
+                                                    'bg-muted relative flex h-40 cursor-pointer items-center justify-center rounded-md border',
                                                     (focusedMedia?.id === media.id ? ' outline-primary outline-2' : ''))
                                                 }
                                                 onClick={createSelector(media)}
@@ -603,7 +603,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                                                 {multiple && (
                                                     <div className="absolute top-2 right-2">
                                                         <Checkbox
-                                                            className="bg-gray-50"
+                                                            className="bg-background"
                                                             onCheckedChange={toggleSelectionItem(media)}
                                                             checked={selection.map((s) => s.id).includes(media.id)}
                                                         />
@@ -627,7 +627,7 @@ function MediaManagerContent<TMultiple extends boolean, TIsUrl extends boolean>(
                             {uploadMutation.isPending ? (
                                 <div className="flex h-full w-full items-center justify-center">
                                     <div className="block">
-                                        <h2 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                        <h2 className="text-foreground mb-2 text-lg font-semibold">
                                             Preparing your asset
                                         </h2>
                                         <ul className="text-muted-foreground max-w-md list-inside space-y-2">
